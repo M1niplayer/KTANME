@@ -1,0 +1,9 @@
+ALLT
+
+
+
+
+ERIK:
+fancy sprite drawing, mellan rows, any y start
+sprite move, restore old pos
+efficient image format - python program that converts pngs to it, transparency, black and white

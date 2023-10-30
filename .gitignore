@@ -2,3 +2,4 @@
 .deps
 outfile.elf
 outfile.hex
+.vscode

@@ -1,6 +1,14 @@
 #include <pic32mx.h>
 #include <stdint.h>
 
+#include "sprites.h"
+
+#define METADATA 0
+#define WIDTH 8
+#define HEIGHT 0
+#define ALPHA 31
+#define IMAGE 1
+
 #define DISPLAY_VDD PORTFbits.RF6
 #define DISPLAY_VBATT PORTFbits.RF5
 #define DISPLAY_COMMAND_DATA PORTFbits.RF4
@@ -62,28 +70,72 @@ void display_init() {
 	spi_send_recv(0xAF);
 }
 
-
-void display_update() {
-	int i, j, k;
-	int c;
-	for(i = 0; i < 4; i++) {
-		DISPLAY_COMMAND_DATA_PORT &= ~DISPLAY_COMMAND_DATA_MASK;
-		spi_send_recv(0x22);
-		spi_send_recv(i);
-		
-		spi_send_recv(0x0);
-		spi_send_recv(0x10);
-		
-		DISPLAY_COMMAND_DATA_PORT |= DISPLAY_COMMAND_DATA_MASK;
-		
-		for(j = 0; j < 16; j++) {
-			
-			for(k = 0; k < 8; k++)
-				spi_send_recv(0);
-		}
-	}
+void set_pos(uint8_t column, uint8_t row) {
+  //command mode
+  DISPLAY_COMMAND_DATA_PORT &= ~DISPLAY_COMMAND_DATA_MASK;
+  //set position
+  spi_send_recv(0x22);
+  //row
+  spi_send_recv(row);
+  
+  //set column
+  spi_send_recv(column & 0xF);
+  spi_send_recv(0x10 | ((column >> 4) & 0xF));
+  
+  //display mode
+  DISPLAY_COMMAND_DATA_PORT |= DISPLAY_COMMAND_DATA_MASK;
 }
 
+void clear_display() {
+  int r;
+  for (r = 0; r<4; r++) {
+    set_pos(0, r);
+    
+    //set everything to black
+    int i;
+    for (i = 0; i<128; i++) {
+      spi_send_recv(0);
+    }
+  }
+}
+
+void draw_sprite(uint8_t x, uint8_t y, const int *sprite) {
+  uint8_t width = (uint8_t)(sprite[METADATA]>>WIDTH);
+  uint8_t height = (uint8_t)(sprite[METADATA]>>HEIGHT);
+  uint8_t alpha = (uint8_t)(sprite[METADATA]>>ALPHA);
+
+  uint8_t max_row = (y+height+7)/8;
+  if (max_row > 4) max_row = 4;
+
+  uint8_t max_column = width;
+  if (max_column > 128 - x) max_column = 128-x;
+
+  // uint8_t max_x = x;
+  // if (max_x > 111) max_x = 111;
+
+  uint8_t row;
+  for (row = y/8; row<max_row; row++) {
+    
+    set_pos(x, row);
+    if (row == y/8) {
+      int i;
+      for (i = 0; i<(int)(x%16); i++) {
+        spi_send_recv(0);
+      }
+    }
+    
+    uint8_t column;
+    for (column = 0; column<max_column; column++) {
+      int c = sprite[column+IMAGE];
+      int shift = ((int)(row*8)-y);
+      uint8_t data;
+      if (shift<0) data = (uint8_t)(c<<-shift);
+      else data = (uint8_t)(c>>shift);
+      
+      spi_send_recv(data);
+    }
+  }
+}
 
 int main(void) {
   /* Set up peripheral bus clock */
@@ -120,23 +172,42 @@ int main(void) {
 	/* Turn on SPI */
 	SPI2CONSET = 0x8000;
 	
+  //enable LEDs
+  TRISE = 0;
+
 	display_init();
 
-  
-  display_update();
-  DISPLAY_COMMAND_DATA_PORT &= ~DISPLAY_COMMAND_DATA_MASK;
-  spi_send_recv(0x22);
-  spi_send_recv(1);
-  
-  spi_send_recv(5 & 0xF);
-  spi_send_recv(0x10 | ((5 >> 4) & 0xF));
-  
-  DISPLAY_COMMAND_DATA_PORT |= DISPLAY_COMMAND_DATA_MASK;
-  
-  spi_send_recv(1);
+  clear_display();
 
+  //draw_sprite(8, 0, cursor);
+
+  uint8_t y = 0;
+  uint8_t dy = 1;
+  uint8_t x = 0;
+  uint8_t dx = 1;
+  while(1) {
+    draw_sprite(0, y, cursor);
+    delay(100000);
+    draw_sprite(0, y, black16);
+    y += dy;
+    if (y == 0 || y == 16) dy *= -1;
+    x += dx;
+    if (x == 0 || x == 112) dx *= -1;
+
+  }
+
+  // set_pos(120,0);
+  // int i;
+  // for (i = 0; i<17; i++) {
+  //   spi_send_recv(9);
+  // }
+
+  // set_pos(120,1);
+  // for (i = 0; i<17; i++) {
+  //   spi_send_recv(9);
+  // }
+  
   //light a led
-  TRISE = 0;
   PORTE = 1;
   while(1) {
         
