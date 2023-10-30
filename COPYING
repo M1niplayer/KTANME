@@ -1,4 +1,4 @@
-COPYRIGHT NOTICE FOR FILES stubs.c, vectors.S, Makefile
+COPYRIGHT NOTICE FOR FILES stubs.c, vectors.S, Makefile, OLED Screen base code in main.c
 
 
 Copyright (c) 2015, Axel Isaksson
