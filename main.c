@@ -116,7 +116,7 @@ void draw_sprite(uint8_t x, uint8_t y, const int *sprite) {
   uint8_t row;
   for (row = y/8; row<max_row; row++) {
     
-    set_pos(x, row);
+    set_pos(x-(x%16), row);
     if (row == y/8) {
       int i;
       for (i = 0; i<(int)(x%16); i++) {
@@ -134,6 +134,10 @@ void draw_sprite(uint8_t x, uint8_t y, const int *sprite) {
       
       spi_send_recv(data);
     }
+  }
+  int i;
+  for (i = 0; i<(int)(16-(x%16)); i++) {
+    spi_send_recv(0);
   }
 }
 
@@ -186,9 +190,9 @@ int main(void) {
   uint8_t x = 0;
   uint8_t dx = 1;
   while(1) {
-    draw_sprite(0, y, cursor);
+    draw_sprite(x, y, cursor);
     delay(100000);
-    draw_sprite(0, y, black16);
+    draw_sprite(x, y, black16);
     y += dy;
     if (y == 0 || y == 16) dy *= -1;
     x += dx;
