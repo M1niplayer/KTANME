@@ -4,6 +4,8 @@
 #include "sprites.h"
 //#include "oled.h"
 
+int screen[128];
+
 void interrupt(void)
 {
   // timerrrs
@@ -13,8 +15,7 @@ void interrupt(void)
 void delay(int cyc)
 {
   int i;
-  for (i = cyc; i > 0; i--)
-    ;
+  for (i = cyc; i > 0; i--);
 }
 
 int btnPressed()
@@ -96,12 +97,18 @@ int main(void) {
   {
     while (1)
     {
-      draw_sprite(0, 0, moduletest);
+      // draw_sprite(0, 0, moduletest);
 
-      draw_sprite(x, y, cursor);
+      // draw_sprite(x, y, cursor);
+
+      set_background(screen, module_background);
+
+      draw_sprite(x, y, cursor, screen);
+
+      present_screen(screen);
 
       delay(100000);
-      // draw_sprite(x, y, black16);
+      
       y += dy;
       if (y == 0 || y == 16)
       {
@@ -115,36 +122,36 @@ int main(void) {
 
       //if lightGamemode (btnPressed() == 0)
 
-        tempLed = 0xff;
-        selectedTempLed = 0xff;
-      if (bitPointer == 7 && btnPressed() == 1)
-      {
-        // skip
-      }
-      else if (bitPointer == 0 && btnPressed() == -1)
-      {
-        // skip
-      }
-      else
-      {
-        bitPointer += btnPressed();
-      }
-      if (bitPointer >= 7)
-        bitPointer = 7;
-      if (bitPointer <= 0)
-        bitPointer = 0;
-      selectedBits = 0xff & (7 << lightsLed - 1);
-      if (bitPointer == 0)
-      {
-        selectedBits = 0x11;
-      }
+      //   tempLed = 0xff;
+      //   selectedTempLed = 0xff;
+      // if (bitPointer == 7 && btnPressed() == 1)
+      // {
+      //   // skip
+      // }
+      // else if (bitPointer == 0 && btnPressed() == -1)
+      // {
+      //   // skip
+      // }
+      // else
+      // {
+      //   bitPointer += btnPressed();
+      // }
+      // if (bitPointer >= 7)
+      //   bitPointer = 7;
+      // if (bitPointer <= 0)
+      //   bitPointer = 0;
+      // selectedBits = 0xff & (7 << lightsLed - 1);
+      // if (bitPointer == 0)
+      // {
+      //   selectedBits = 0x11;
+      // }
 
-      // e.g if selected bits is 00111000 then tempLed would be VV000VVVV
-      // where V is the current value of lightled
-      tempLed &= lightsLed & (0xff & ~selectedBits);
-      selectedTempLed = ~(lightsLed & selectedBits);
-      lightsLed = tempLed | selectedTempLed;
-      PORTE = lightsLed;
+      // // e.g if selected bits is 00111000 then tempLed would be VV000VVVV
+      // // where V is the current value of lightled
+      // tempLed &= lightsLed & (0xff & ~selectedBits);
+      // selectedTempLed = ~(lightsLed & selectedBits);
+      // lightsLed = tempLed | selectedTempLed;
+      // PORTE = lightsLed;
     }
   }
 

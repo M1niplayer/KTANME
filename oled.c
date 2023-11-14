@@ -95,26 +95,53 @@ void clear_display() {
   }
 }
 
-void draw_sprite(uint8_t x, uint8_t y, const int *sprite) {
-  uint8_t width = (uint8_t)(sprite[METADATA]>>WIDTH);
-  uint8_t height = (uint8_t)(sprite[METADATA]>>HEIGHT);
-  uint8_t alpha = (uint8_t)(sprite[METADATA]>>ALPHA);
+// print a sprite directly to anywhere on the oled screen, but overwrites the columns it overlaps
+// void draw_sprite(uint8_t x, uint8_t y, const int *sprite) {
+//   uint8_t width = (uint8_t)(sprite[METADATA]>>WIDTH);
+//   uint8_t height = (uint8_t)(sprite[METADATA]>>HEIGHT);
+//   uint8_t alpha = (uint8_t)(sprite[METADATA]>>ALPHA);
 
-  uint8_t max_row = (y+height+7)/8;
-  if (max_row > 4) max_row = 4;
+//   uint8_t max_row = (y+height+7)/8;
+//   if (max_row > 4) max_row = 4;
 
-  uint8_t max_column = width;
-  if (max_column > 128 - x) max_column = 128-x;
+//   uint8_t max_column = width;
+//   if (max_column > 128 - x) max_column = 128-x;
 
-  uint8_t row;
-  for (row = y/8; row<max_row; row++) {
+//   uint8_t row;
+//   for (row = y/8; row<max_row; row++) {
     
-    set_pos(x, row);
+//     set_pos(x, row);
+    
+//     uint8_t column;
+//     for (column = 0; column<max_column; column++) {
+//       int c = sprite[column+IMAGE];
+//       int shift = ((int)(row*8)-y);
+//       uint8_t data;
+//       if (shift<0) data = (uint8_t)(c<<-shift);
+//       else data = (uint8_t)(c>>shift);
+      
+//       spi_send_recv(data);
+//     }
+//   }
+// }
+
+void set_background(int *screen, const int *background) {
+  uint8_t i;
+  for (i = 0; i<128; i++) {
+    screen[i] = background[i];
+  }
+}
+
+void present_screen(const int *screen) {
+  uint8_t row;
+  for (row = 0; row<4; row++) {
+    
+    set_pos(0, row);
     
     uint8_t column;
-    for (column = 0; column<max_column; column++) {
-      int c = sprite[column+IMAGE];
-      int shift = ((int)(row*8)-y);
+    for (column = 0; column<128; column++) {
+      int c = screen[column];
+      int shift = (int)(row*8);
       uint8_t data;
       if (shift<0) data = (uint8_t)(c<<-shift);
       else data = (uint8_t)(c>>shift);
@@ -123,3 +150,40 @@ void draw_sprite(uint8_t x, uint8_t y, const int *sprite) {
     }
   }
 }
+
+void draw_sprite(uint8_t x, uint8_t y, const int *sprite, int *screen) {
+  uint8_t width = (uint8_t)(sprite[METADATA]>>WIDTH);
+  uint8_t height = (uint8_t)(sprite[METADATA]>>HEIGHT);
+  uint8_t alpha = (uint8_t)(sprite[METADATA]>>ALPHA);
+
+  uint8_t max_column = width;
+  if (max_column + x > 128) max_column = 128-x;
+
+  if (alpha) {
+    uint8_t column;
+    for (column = 0; column<max_column; column++) {
+      int c = sprite[column+IMAGE];
+
+      int sprite_c = sprite[column+IMAGE];
+      int sprite_a = sprite[column+IMAGE+width];
+      
+      screen[x+column] = ((screen[x+column] & (~(sprite_a<<y))) | ((sprite_c & sprite_a)<<y));
+    }
+  }
+}
+
+// void draw_sprite(uint8_t x, uint8_t y, const int *sprite, int *screen) {
+//   uint8_t width = (uint8_t)(sprite[METADATA]>>WIDTH);
+//   uint8_t height = (uint8_t)(sprite[METADATA]>>HEIGHT);
+//   uint8_t alpha = (uint8_t)(sprite[METADATA]>>ALPHA);
+
+//   uint8_t max_column = width;
+//   if (max_column + x > 128) max_column = 128-x;
+
+//   uint8_t column;
+//   for (column = 0; column<max_column; column++) {
+//     int c = sprite[column+IMAGE];
+    
+//     screen[x+column] = 0xFFFFFFFF;
+//   }
+// }
