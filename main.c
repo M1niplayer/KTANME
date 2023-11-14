@@ -25,6 +25,7 @@
 
 void interrupt(void)
 {
+  //timerrrs
   return;
 }
 
@@ -141,6 +142,13 @@ void draw_sprite(uint8_t x, uint8_t y, const int *sprite) {
   }
 }
 
+int btnPressed(){
+  if ((PORTD & 0xf) == 1) return -1; //button 1
+  
+  if ((PORTD & 0xf) == 1) return 1; //butoton 4
+}
+
+
 int main(void) {
   /* Set up peripheral bus clock */
 	OSCCON &= ~0x180000;
@@ -150,14 +158,14 @@ int main(void) {
 	AD1PCFG = 0xFFFF;
 	ODCE = 0x0;
 	TRISECLR = 0xFF;
-	PORTE = 0x0;
+	PORTE = 0x0;       //leds
 	
 	/* Output pins for display signals */
 	PORTF = 0xFFFF;
 	PORTG = (1 << 9);
 	ODCF = 0x0;
 	ODCG = 0x0;
-	TRISFCLR = 0x70;
+	TRISFCLR = 0x70;  
 	TRISGCLR = 0x200;
 	
 	/* Set up input pins */
@@ -189,7 +197,19 @@ int main(void) {
   uint8_t dy = 1;
   uint8_t x = 0;
   uint8_t dx = 1;
-  while(1) {
+
+  uint8_t game = 1;
+
+  uint8_t lightsLed = 0xff; //sätt på alla ljus 1111 1111
+  uint8_t selectedBits = 0xff;
+  PORTE = lightsLed;
+  //skicka också ligihtsled till skärmen
+  uint_8_t bitPointer = 0; //go from 0-7, corresponding to each bit in lightsled
+  
+  for (int i = 8; )
+  while(game) {
+
+    //uodate sprite hjälpfunktion?
     draw_sprite(x, y, cursor);
     delay(100000);
     draw_sprite(x, y, black16);
@@ -198,7 +218,21 @@ int main(void) {
     x += dx;
     if (x == 0 || x == 112) dx *= -1;
 
-  }
+   
+  //if lightGamemode
+    if (bitPointer != 7 || bitPointer != 0) {
+      bitPointer += btnPressed(); //either 1 or -1
+    }
+      if (lightsLed == 0){
+        lightsLed = ~lightsLed
+      }
+      //7 is 111, so this will light up select bit + adjacent, except for special case 0
+      selectedBits  = 0xff & (7 << lightsLed - 1);
+      lightsLed = ~selectedBits;
+    }
+  
+    if (lightsLed == 0) game = 0;
+  
 
   // set_pos(120,0);
   // int i;
@@ -212,7 +246,10 @@ int main(void) {
   // }
   
   //light a led
-  PORTE = 1;
+  
+  //på något sätt visa vilket av ljusen man kommer släcka. 
+  
+
   while(1) {
         
   }
