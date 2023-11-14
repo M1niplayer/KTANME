@@ -185,6 +185,8 @@ int main(void) {
 
   uint8_t lightsLed = 0xff; //sätt på alla ljus 1111 1111
   uint8_t selectedBits = 0xff;
+  uint8_t tempLed = 0xff;
+  uint8_t stupidTempLed = 0xff;
   PORTE = lightsLed;
   //skicka också ligihtsled till skärmen
   uint8_t bitPointer = 0; //go from 0-7, corresponding to each bit in lightsled
@@ -210,16 +212,33 @@ int main(void) {
     if (x == 0 || x == 112) dx *= -1;
 
   //if lightGamemode
-    if (bitPointer != 7 || bitPointer != 0) {
-      bitPointer += btnPressed(); //either 1 or -1
-    }
-      if (lightsLed == 0){
-        lightsLed = ~lightsLed;
+    if (btnPressed() == 0) {
+      tempLed = 0xff;
+      stupidTempLed = 0xff;
+
+      if (bitPointer == 7 && btnPressed == 1) {
+        //skip
       }
-      //7 is 111, so this will light up select bit + adjacent, except for special case 0
-      selectedBits  = 0xff & (7 << lightsLed - 1);
-      lightsLed = ~selectedBits;
+
+      else if (bitPointer == 0 && btnPressed() == -1){
+        //skip
+      }
+      else{
+        bitPointer += btnPressed(); 
+      }  
+
+        selectedBits = 0xff & (7 << lightsLed - 1);
+
+        if (bitPointer == 0){
+          selectedBits = 0x11;
+        }
+        tempLed &= lightsLed & (0xff & ~selectedBits); 
+        stupidTempLed = lightsLed & selectedBits;
+        
+        lightsLed = tempLed | stupidTempLed;
+
     }
+  }
   
     if (lightsLed == 0) game = 0;
   
