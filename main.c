@@ -25,153 +25,180 @@
 
 void interrupt(void)
 {
-  //timerrrs
+  // timerrrs
   return;
 }
 
-void delay(int cyc) {
-	int i;
-	for(i = cyc; i > 0; i--);
+void delay(int cyc)
+{
+  int i;
+  for (i = cyc; i > 0; i--)
+    ;
 }
 
-uint8_t spi_send_recv(uint8_t data) {
-	while(!(SPI2STAT & 0x08));
-	SPI2BUF = data;
-	while(!(SPI2STAT & 0x01));
-	return SPI2BUF;
+uint8_t spi_send_recv(uint8_t data)
+{
+  while (!(SPI2STAT & 0x08))
+    ;
+  SPI2BUF = data;
+  while (!(SPI2STAT & 0x01))
+    ;
+  return SPI2BUF;
 }
 
-void display_init() {
-	DISPLAY_COMMAND_DATA_PORT &= ~DISPLAY_COMMAND_DATA_MASK;
-	delay(10);
-	DISPLAY_VDD_PORT &= ~DISPLAY_VDD_MASK;
-	delay(1000000);
-	
-	spi_send_recv(0xAE);
-	DISPLAY_RESET_PORT &= ~DISPLAY_RESET_MASK;
-	delay(10);
-	DISPLAY_RESET_PORT |= DISPLAY_RESET_MASK;
-	delay(10);
-	
-	spi_send_recv(0x8D);
-	spi_send_recv(0x14);
-	
-	spi_send_recv(0xD9);
-	spi_send_recv(0xF1);
-	
-	DISPLAY_VBATT_PORT &= ~DISPLAY_VBATT_MASK;
-	delay(10000000);
-	
-	spi_send_recv(0xA1);
-	spi_send_recv(0xC8);
-	
-	spi_send_recv(0xDA);
-	spi_send_recv(0x20);
-	
-	spi_send_recv(0xAF);
-}
-
-void set_pos(uint8_t column, uint8_t row) {
-  //command mode
+void display_init()
+{
   DISPLAY_COMMAND_DATA_PORT &= ~DISPLAY_COMMAND_DATA_MASK;
-  //set row
+  delay(10);
+  DISPLAY_VDD_PORT &= ~DISPLAY_VDD_MASK;
+  delay(1000000);
+
+  spi_send_recv(0xAE);
+  DISPLAY_RESET_PORT &= ~DISPLAY_RESET_MASK;
+  delay(10);
+  DISPLAY_RESET_PORT |= DISPLAY_RESET_MASK;
+  delay(10);
+
+  spi_send_recv(0x8D);
+  spi_send_recv(0x14);
+
+  spi_send_recv(0xD9);
+  spi_send_recv(0xF1);
+
+  DISPLAY_VBATT_PORT &= ~DISPLAY_VBATT_MASK;
+  delay(10000000);
+
+  spi_send_recv(0xA1);
+  spi_send_recv(0xC8);
+
+  spi_send_recv(0xDA);
+  spi_send_recv(0x20);
+
+  spi_send_recv(0xAF);
+}
+
+void set_pos(uint8_t column, uint8_t row)
+{
+  // command mode
+  DISPLAY_COMMAND_DATA_PORT &= ~DISPLAY_COMMAND_DATA_MASK;
+  // set row
   spi_send_recv(0xb0 | (row & 0xF));
-  //set column
+  // set column
   spi_send_recv(0x00 | (column & 0xF));
   spi_send_recv(0x10 | ((column >> 4) & 0xF));
-  
-  //display mode
+
+  // display mode
   DISPLAY_COMMAND_DATA_PORT |= DISPLAY_COMMAND_DATA_MASK;
 }
 
-void clear_display() {
+void clear_display()
+{
   int r;
-  for (r = 0; r<4; r++) {
+  for (r = 0; r < 4; r++)
+  {
     set_pos(0, r);
-    
-    //set everything to black
+
+    // set everything to black
     int i;
-    for (i = 0; i<128; i++) {
+    for (i = 0; i < 128; i++)
+    {
       spi_send_recv(0);
     }
   }
 }
 
-void draw_sprite(uint8_t x, uint8_t y, const int *sprite) {
-  uint8_t width = (uint8_t)(sprite[METADATA]>>WIDTH);
-  uint8_t height = (uint8_t)(sprite[METADATA]>>HEIGHT);
-  uint8_t alpha = (uint8_t)(sprite[METADATA]>>ALPHA);
+void draw_sprite(uint8_t x, uint8_t y, const int *sprite)
+{
+  uint8_t width = (uint8_t)(sprite[METADATA] >> WIDTH);
+  uint8_t height = (uint8_t)(sprite[METADATA] >> HEIGHT);
+  uint8_t alpha = (uint8_t)(sprite[METADATA] >> ALPHA);
 
-  uint8_t max_row = (y+height+7)/8;
-  if (max_row > 4) max_row = 4;
+  uint8_t max_row = (y + height + 7) / 8;
+  if (max_row > 4)
+    max_row = 4;
 
   uint8_t max_column = width;
-  if (max_column > 128 - x) max_column = 128-x;
+  if (max_column > 128 - x)
+    max_column = 128 - x;
 
   uint8_t row;
-  for (row = y/8; row<max_row; row++) {
-    
+  for (row = y / 8; row < max_row; row++)
+  {
+
     set_pos(x, row);
-    
+
     uint8_t column;
-    for (column = 0; column<max_column; column++) {
-      int c = sprite[column+IMAGE];
-      int shift = ((int)(row*8)-y);
+    for (column = 0; column < max_column; column++)
+    {
+      int c = sprite[column + IMAGE];
+      int shift = ((int)(row * 8) - y);
       uint8_t data;
-      if (shift<0) data = (uint8_t)(c<<-shift);
-      else data = (uint8_t)(c>>shift);
-      
+      if (shift < 0)
+        data = (uint8_t)(c << -shift);
+      else
+        data = (uint8_t)(c >> shift);
+
       spi_send_recv(data);
     }
   }
 }
 
-int btnPressed(){
-  if (PORTD & 0b0010000 == 1) return -1; //button 1
-  
-  if (PORTD & 0b1000000 == 1) return 1; //butoton 4
+int btnPressed()
+{
+  static uint8_t count = 0;
+  //awful way of counting if you are not interrupting
+  count += 1;
+  if (count >= 200) return 0;
+  count = 0;
+  if ((PORTD & (1 << 5)) >> 5 == 1)
+    return -1; // button 3
+
+  if ((PORTD & (1 << 7)) >> 7 == 1)
+    return 1; // butoton 1
+
+  return 0;
 }
 
-
-int main(void) {
+int main(void)
+{
   /* Set up peripheral bus clock */
-	OSCCON &= ~0x180000;
-	OSCCON |= 0x080000;
-	
-	/* Set up output pins */
-	AD1PCFG = 0xFFFF;
-	ODCE = 0x0;
-	TRISECLR = 0xFF;
-	PORTE = 0x0;       //leds
-	
-	/* Output pins for display signals */
-	PORTF = 0xFFFF;
-	PORTG = (1 << 9);
-	ODCF = 0x0;
-	ODCG = 0x0;
-	TRISFCLR = 0x70;  
-	TRISGCLR = 0x200;
-	
-	/* Set up input pins */
-	TRISDSET = (1 << 8);
-	TRISFSET = (1 << 1);
-	
-	/* Set up SPI as master */
-	SPI2CON = 0;
-	SPI2BRG = 4;
-	
-	/* Clear SPIROV*/
-	SPI2STATCLR &= ~0x40;
-	/* Set CKP = 1, MSTEN = 1; */
+  OSCCON &= ~0x180000;
+  OSCCON |= 0x080000;
+
+  /* Set up output pins */
+  AD1PCFG = 0xFFFF;
+  ODCE = 0x0;
+  TRISECLR = 0xFF;
+  PORTE = 0x0; // leds
+
+  /* Output pins for display signals */
+  PORTF = 0xFFFF;
+  PORTG = (1 << 9);
+  ODCF = 0x0;
+  ODCG = 0x0;
+  TRISFCLR = 0x70;
+  TRISGCLR = 0x200;
+
+  /* Set up input pins */
+  TRISDSET = (111 << 5);
+  TRISFSET = (1 << 1);
+
+  /* Set up SPI as master */
+  SPI2CON = 0;
+  SPI2BRG = 4;
+
+  /* Clear SPIROV*/
+  SPI2STATCLR &= ~0x40;
+  /* Set CKP = 1, MSTEN = 1; */
   SPI2CON |= 0x60;
-	
-	/* Turn on SPI */
-	SPI2CONSET = 0x8000;
-	
-  //enable LEDs
+
+  /* Turn on SPI */
+  SPI2CONSET = 0x8000;
+
+  // enable LEDs
   TRISE = 0;
 
-	display_init();
+  display_init();
 
   clear_display();
 
@@ -180,68 +207,75 @@ int main(void) {
   uint8_t x = 0;
   uint8_t dx = 1;
 
-
   uint8_t game = 1;
 
-  uint8_t lightsLed = 0xff; //sätt på alla ljus 1111 1111
+  uint8_t lightsLed = 0xff; // sätt på alla ljus 1111 1111
   uint8_t selectedBits = 0xff;
+
   uint8_t tempLed = 0xff;
-  uint8_t stupidTempLed = 0xff;
-  PORTE = lightsLed;
-  //skicka också ligihtsled till skärmen
-  uint8_t bitPointer = 0; //go from 0-7, corresponding to each bit in lightsled
-  
-  while(game) {
+  uint8_t selectedTempLed = 0xff;
+  PORTE = 0;
+  // skicka också ligihtsled till skärmen
+  uint8_t bitPointer = 0; // go from 0-7, corresponding to each bit in lightsled
 
-    //update sprite hjälpfunktion?
+  while (game)
+  {
+    while (1)
+    {
+      draw_sprite(0, 0, moduletest);
 
-  //light a led
-  PORTE = 1;
-  
-  while(1) {
-    draw_sprite(0, 0, moduletest);
+      draw_sprite(x, y, cursor);
 
-
-    draw_sprite(x, y, cursor);
-
-    delay(100000);
-    //draw_sprite(x, y, black16);
-    y += dy;
-    if (y == 0 || y == 16) dy *= -1;
-    x += dx;
-    if (x == 0 || x == 112) dx *= -1;
-
-  //if lightGamemode
-    if (btnPressed() == 0) {
-      tempLed = 0xff;
-      stupidTempLed = 0xff;
-
-      if (bitPointer == 7 && btnPressed == 1) {
-        //skip
+      delay(100000);
+      // draw_sprite(x, y, black16);
+      y += dy;
+      if (y == 0 || y == 16)
+      {
+        dy *= -1;
+      }
+      x += dx;
+      if (x == 0 || x == 112)
+      {
+        dx *= -1;
       }
 
-      else if (bitPointer == 0 && btnPressed() == -1){
-        //skip
+      //if lightGamemode (btnPressed() == 0)
+
+        tempLed = 0xff;
+        selectedTempLed = 0xff;
+      if (bitPointer == 7 && btnPressed() == 1)
+      {
+        // skip
       }
-      else{
-        bitPointer += btnPressed(); 
-      }  
+      else if (bitPointer == 0 && btnPressed() == -1)
+      {
+        // skip
+      }
+      else
+      {
+        bitPointer += btnPressed();
+      }
+      if (bitPointer >= 7)
+        bitPointer = 7;
+      if (bitPointer <= 0)
+        bitPointer = 0;
+      selectedBits = 0xff & (7 << lightsLed - 1);
+      if (bitPointer == 0)
+      {
+        selectedBits = 0x11;
+      }
 
-        selectedBits = 0xff & (7 << lightsLed - 1);
-
-        if (bitPointer == 0){
-          selectedBits = 0x11;
-        }
-        tempLed &= lightsLed & (0xff & ~selectedBits); 
-        stupidTempLed = lightsLed & selectedBits;
-        
-        lightsLed = tempLed | stupidTempLed;
-
+      // e.g if selected bits is 00111000 then tempLed would be VV000VVVV
+      // where V is the current value of lightled
+      tempLed &= lightsLed & (0xff & ~selectedBits);
+      selectedTempLed = ~(lightsLed & selectedBits);
+      lightsLed = tempLed | selectedTempLed;
+      PORTE = lightsLed;
     }
   }
-  
-    if (lightsLed == 0) game = 0;
-  
+
+  if (lightsLed == 0)
+    game = 0;
 
   // set_pos(120,0);
   // int i;
@@ -253,18 +287,14 @@ int main(void) {
   // for (i = 0; i<17; i++) {
   //   spi_send_recv(9);
   // }
-  
-  //light a led
-  
-  //på något sätt visa vilket av ljusen man kommer släcka. 
-  
 
+  // light a led
 
-  }
-  
+  // på något sätt visa vilket av ljusen man kommer släcka.
+  //}
 
-  while(1) {
-        
+  while (1)
+  {
   }
   return 0;
 }
