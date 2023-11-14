@@ -143,9 +143,9 @@ void draw_sprite(uint8_t x, uint8_t y, const int *sprite) {
 }
 
 int btnPressed(){
-  if ((PORTD & 0xf) == 1) return -1; //button 1
+  if (PORTD & 0b0010000 == 1) return -1; //button 1
   
-  if ((PORTD & 0xf) == 1) return 1; //butoton 4
+  if (PORTD & 0b1000000 == 1) return 1; //butoton 4
 }
 
 
