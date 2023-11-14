@@ -42,6 +42,7 @@ uint8_t spi_send_recv(uint8_t data) {
 }
 
 void display_init() {
+  //power on
 	DISPLAY_COMMAND_DATA_PORT &= ~DISPLAY_COMMAND_DATA_MASK;
 	delay(10);
 	DISPLAY_VDD_PORT &= ~DISPLAY_VDD_MASK;
@@ -69,6 +70,16 @@ void display_init() {
 	spi_send_recv(0x20);
 	
 	spi_send_recv(0xAF);
+
+  //Page addressing mode
+  //command mode
+  DISPLAY_COMMAND_DATA_PORT &= ~DISPLAY_COMMAND_DATA_MASK;
+  //set addressing mode
+  spi_send_recv(0x20);
+  //page addressing code
+  spi_send_recv(0x01);
+  //display mode
+  DISPLAY_COMMAND_DATA_PORT |= DISPLAY_COMMAND_DATA_MASK;
 }
 
 void set_pos(uint8_t column, uint8_t row) {
