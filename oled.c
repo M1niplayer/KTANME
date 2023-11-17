@@ -1,6 +1,8 @@
 #include <pic32mx.h>
 #include <stdint.h>
 
+const int const num[30] = {0b00001110, 0b00010001, 0b00001110, 0b00000010, 0b00011111, 0b00000000, 0b00010010, 0b00011001, 0b00010110, 0b00010001, 0b00010101, 0b00001010, 0b00000111, 0b00000100, 0b00011111, 0b00010111, 0b00010101, 0b00001001, 0b00001110, 0b00010101, 0b00001000, 0b00000001, 0b00011001, 0b00000111, 0b00001010, 0b00010101, 0b00001010, 0b00000010, 0b00010101, 0b00001110, };
+
 #define METADATA 0
 #define WIDTH 8
 #define HEIGHT 0
@@ -132,6 +134,8 @@ void set_background(int *screen, const int *background) {
   }
 }
 
+// void present_changes(const int *changes[4], const int *screen)
+
 void present_screen(const int *screen) {
   uint8_t row;
   for (row = 0; row<4; row++) {
@@ -162,13 +166,23 @@ void draw_sprite(uint8_t x, uint8_t y, const int *sprite, int *screen) {
   if (alpha) {
     uint8_t column;
     for (column = 0; column<max_column; column++) {
-      int c = sprite[column+IMAGE];
 
       int sprite_c = sprite[column+IMAGE];
       int sprite_a = sprite[column+IMAGE+width];
       
-      screen[x+column] = ((screen[x+column] & (~(sprite_a<<y))) | ((sprite_c & sprite_a)<<y));
+      screen[x+column] = ((screen[x+column] & (~(sprite_a<<y))) | (sprite_c<<y)); //((sprite_c & sprite_a)<<y))
     }
+  }
+}
+
+void draw_digit(uint8_t x, uint8_t y, uint8_t digit, int *screen) {
+  digit = digit%10;
+  uint8_t column;
+  for (column = 0; column<128-x; column++) {
+    if (column>2) break;
+    int digit_c = num[(digit*3)+column];
+    
+    screen[x+column] = ((screen[x+column] & (~(0x1f<<y))) | ((int)digit_c<<y));
   }
 }
 

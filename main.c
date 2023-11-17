@@ -78,12 +78,21 @@ int main(void) {
 
   clear_display();
 
-  uint8_t y = 0;
-  uint8_t dy = 1;
-  uint8_t x = 0;
-  uint8_t dx = 1;
+  uint8_t cy = 0;
+  uint8_t cx = 0;
+  // uint8_t y = 0;
+  // uint8_t dy = 1;
+  // uint8_t x = 0;
+  // uint8_t dx = 1;
+  // uint8_t y2 = 0;
+  // uint8_t dy2 = 1;
+  // uint8_t x2 = 112;
+  // uint8_t dx2 = -1;
 
   uint8_t game = 1;
+
+  uint16_t time = 900;
+  uint8_t counter = 0;
 
   uint8_t lightsLed = 0xff; // sätt på alla ljus 1111 1111
   uint8_t selectedBits = 0xff;
@@ -99,26 +108,70 @@ int main(void) {
     {
       // draw_sprite(0, 0, moduletest);
 
+      if (PORTD & (1 << 7)) {
+        if (cx>1) cx -= 2;
+      }
+      
+      if (PORTD & (1 << 6)) {
+        if (cy>0) cy -= 1;
+      }
+
+      if (PORTD & (1 << 5)) {
+        if (cy<31) cy += 1;
+      }
+
+      if (PORTF & (1 << 1)) {
+        if (cx<127) cx += 2;
+      }
+
+      
+
+     
+
       // draw_sprite(x, y, cursor);
 
-      set_background(screen, module_background);
+      set_background(screen, uidraft);
 
-      draw_sprite(x, y, cursor, screen);
+      draw_sprite(cx, cy, cursor, screen);
+
+      uint8_t seconds = time%60;
+      uint8_t minutes = time/60;
+      draw_digit(106, 3, minutes/10, screen);
+      draw_digit(110, 3, minutes%10, screen);
+      draw_digit(116, 3, seconds/10, screen);
+      draw_digit(120, 3, seconds%10, screen);
+      counter ++;
+      if (counter>60) {
+        time -= 1;
+        counter = 0;
+      }
+      // draw_sprite(x, y, cursor, screen);
+      // draw_sprite(x2, y2, cursor, screen);
 
       present_screen(screen);
 
       delay(100000);
       
-      y += dy;
-      if (y == 0 || y == 16)
-      {
-        dy *= -1;
-      }
-      x += dx;
-      if (x == 0 || x == 112)
-      {
-        dx *= -1;
-      }
+      // y += dy;
+      // if (y == 0 || y == 16)
+      // {
+      //   dy *= -1;
+      // }
+      // x += dx;
+      // if (x == 0 || x == 112)
+      // {
+      //   dx *= -1;
+      // }
+      // y2 += dy2;
+      // if (y2 == 0 || y2 == 16)
+      // {
+      //   dy2 *= -1;
+      // }
+      // x2 += dx2;
+      // if (x2 == 0 || x2 == 112)
+      // {
+      //   dx2 *= -1;
+      // }
 
       //if lightGamemode (btnPressed() == 0)
 

@@ -10,6 +10,7 @@ f = open("sprites.h","w")
 
 files = os.listdir()
 files.remove("converter.py")
+files.remove("nums.png")
 for fi in files:
     if (fi[-4:] == ".png"):
         has_alpha = "0"
@@ -45,7 +46,32 @@ for fi in files:
         f.write("const int const "+fi[:-4]+"[] = {0b"+has_alpha+"000000000000000"+format(img_w, '08b')+format(img_h, '08b') +", \n"+color)
         if (has_alpha == "1"): f.write(alpha)
         f.write("};\n\n")
+        img.close()
 
+
+
+img = Image.open("nums.png", 'r')
+img_w, img_h = img.size
+pixels = list(img.getdata())
+
+color = ""
+
+for x in range(img_w):
+    cstr = ""
+    for y in range(img_h):
+        rgb = pixels[x+img_w*y]
+        if (rgb == (255, 255, 255, 255)):
+            cstr = "1" + cstr
+        else:
+            cstr = "0" + cstr
+    if (img_h<8):
+        padding = "0"*(8-img_h)
+        cstr = padding + cstr
+    color += "0b" + cstr + ", "
+    
+f.write("const int const num[30] = {"+color)
+if (has_alpha == "1"): f.write(alpha)
+f.write("};\n\n")
+img.close()
 
 f.close()
-
