@@ -71,6 +71,14 @@ int main(void) {
   /* Turn on SPI */
   SPI2CONSET = 0x8000;
 
+  //reset timer
+  T2CON = 0;
+  TMR2 = 0;
+
+  PR2 =  5208; // 80 000 000MHZ / 10HZ / 256 prescaling
+  T2CONSET = 0x0070; //256 prescale
+  T2CONSET = 0x8000; //start timer
+
   // enable LEDs
   TRISE = 0;
 
@@ -104,8 +112,9 @@ int main(void) {
 
   while (game)
   {
-    while (1)
-    {
+    if ((IFS(0) & 0b100000000) != 0) {
+      IFSCLR(0) = 0b100000000;
+
       // draw_sprite(0, 0, moduletest);
 
       if (PORTD & (1 << 7)) {
@@ -150,7 +159,7 @@ int main(void) {
 
       present_screen(screen);
 
-      delay(100000);
+      //delay(100000);
       
       // y += dy;
       // if (y == 0 || y == 16)
