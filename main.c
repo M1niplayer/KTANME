@@ -88,14 +88,6 @@ int main(void) {
 
   uint8_t cy = 0;
   uint8_t cx = 0;
-  // uint8_t y = 0;
-  // uint8_t dy = 1;
-  // uint8_t x = 0;
-  // uint8_t dx = 1;
-  // uint8_t y2 = 0;
-  // uint8_t dy2 = 1;
-  // uint8_t x2 = 112;
-  // uint8_t dx2 = -1;
 
   uint8_t game = 1;
 
@@ -115,8 +107,6 @@ int main(void) {
     if ((IFS(0) & 0b100000000) != 0) {
       IFSCLR(0) = 0b100000000;
 
-      // draw_sprite(0, 0, moduletest);
-
       if (PORTD & (1 << 7)) {
         if (cx>1) cx -= 2;
       }
@@ -133,12 +123,6 @@ int main(void) {
         if (cx<127) cx += 2;
       }
 
-      
-
-     
-
-      // draw_sprite(x, y, cursor);
-
       set_background(screen, uidraft);
 
       draw_sprite(cx, cy, cursor, screen);
@@ -154,33 +138,7 @@ int main(void) {
         time -= 1;
         counter = 0;
       }
-      // draw_sprite(x, y, cursor, screen);
-      // draw_sprite(x2, y2, cursor, screen);
-
       present_screen(screen);
-
-      //delay(100000);
-      
-      // y += dy;
-      // if (y == 0 || y == 16)
-      // {
-      //   dy *= -1;
-      // }
-      // x += dx;
-      // if (x == 0 || x == 112)
-      // {
-      //   dx *= -1;
-      // }
-      // y2 += dy2;
-      // if (y2 == 0 || y2 == 16)
-      // {
-      //   dy2 *= -1;
-      // }
-      // x2 += dx2;
-      // if (x2 == 0 || x2 == 112)
-      // {
-      //   dx2 *= -1;
-      // }
 
       //if lightGamemode (btnPressed() == 0)
 
@@ -219,17 +177,6 @@ int main(void) {
 
   if (lightsLed == 0)
     game = 0;
-
-  // set_pos(120,0);
-  // int i;
-  // for (i = 0; i<17; i++) {
-  //   spi_send_recv(9);
-  // }
-
-  // set_pos(120,1);
-  // for (i = 0; i<17; i++) {
-  //   spi_send_recv(9);
-  // }
 
   // light a led
 
