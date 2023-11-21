@@ -2,7 +2,7 @@
 #include <stdint.h>
 
 #include "sprites.h"
-//#include "oled.h"
+// #include "oled.h"
 
 int screen[128];
 
@@ -15,27 +15,30 @@ void interrupt(void)
 void delay(int cyc)
 {
   int i;
-  for (i = cyc; i > 0; i--);
+  for (i = cyc; i > 0; i--)
+    ;
 }
 
 int btnPressed()
 {
-  static uint8_t count = 0;
-  //awful way of counting if you are not interrupting
-  count += 1;
-  if (count >= 200) return 0;
-  count = 0;
-  if ((PORTD & (1 << 5)) >> 5 == 1)
-    return -1; // button 3
+  if (PORTF & (1 << 1))
+    return 1; // BTN1
 
-  if ((PORTD & (1 << 7)) >> 7 == 1)
-    return 1; // butoton 1
+  if (PORTD & (1 << 5))
+    return 2; // BTN2
+
+  if (PORTD & (1 << 6))
+   return 3; // BTN3
+
+  if (PORTD & (1 << 7))
+    return 4; // BTN4
 
   return 0;
 }
 
-int main(void) {
-  //SETUP
+int main(void)
+{
+  // SETUP
 
   /* Set up peripheral bus clock */
   OSCCON &= ~0x180000;
@@ -71,13 +74,13 @@ int main(void) {
   /* Turn on SPI */
   SPI2CONSET = 0x8000;
 
-  //reset timer
+  // reset timer
   T2CON = 0;
   TMR2 = 0;
 
-  PR2 =  5208; // 80 000 000MHZ / 10HZ / 256 prescaling
-  T2CONSET = 0x0070; //256 prescale
-  T2CONSET = 0x8000; //start timer
+  PR2 = 5208;        // 80 000 000MHZ / 10HZ / 256 prescaling
+  T2CONSET = 0x0070; // 256 prescale
+  T2CONSET = 0x8000; // start timer
 
   // enable LEDs
   TRISE = 0;
@@ -94,95 +97,114 @@ int main(void) {
   uint16_t time = 900;
   uint8_t counter = 0;
 
-  uint8_t lightsLed = 0xff; // sätt på alla ljus 1111 1111
   uint8_t selectedBits = 0xff;
+  uint8_t bitPointer = 0;
+  uint8_t PORTE8 = 0;
 
-  uint8_t tempLed = 0xff;
+  uint8_t tempLed = 0xff; //initial values
   uint8_t selectedTempLed = 0xff;
-  PORTE = 0;
+  PORTE = 0b01001001;
+  uint8_t lightsLed = PORTE; // sätt på alla ljus 1111 1111
   // skicka också ligihtsled till skärmen
 
   while (game)
   {
-    if ((IFS(0) & 0b100000000) != 0) {
+    if ((IFS(0) & 0b100000000) != 0)
+    {
       IFSCLR(0) = 0b100000000;
 
-      if (PORTD & (1 << 7)) {
-        if (cx>1) cx -= 2;
-      }
-      
-      if (PORTD & (1 << 6)) {
-        if (cy>0) cy -= 1;
+      if (PORTD & (1 << 7))
+      {
+        if (cx > 1)
+          cx -= 2;
       }
 
-      if (PORTD & (1 << 5)) {
-        if (cy<31) cy += 1;
+      if (PORTD & (1 << 6))
+      {
+        if (cy > 0)
+          cy -= 1;
       }
 
-      if (PORTF & (1 << 1)) {
-        if (cx<127) cx += 2;
+      if (PORTD & (1 << 5))
+      {
+        if (cy < 31)
+          cy += 1;
       }
 
+      if (PORTF & (1 << 1))
+      {
+        if (cx < 127)
+          cx += 2;
+      }
+
+      // switches
+
+      // time logic
       set_background(screen, uidraft);
 
       draw_sprite(cx, cy, cursor, screen);
 
-      uint8_t seconds = time%60;
-      uint8_t minutes = time/60;
-      draw_digit(106, 3, minutes/10, screen);
-      draw_digit(110, 3, minutes%10, screen);
-      draw_digit(116, 3, seconds/10, screen);
-      draw_digit(120, 3, seconds%10, screen);
-      counter ++;
-      if (counter>60) {
+      uint8_t seconds = time % 60;
+      uint8_t minutes = time / 60;
+      draw_digit(106, 3, btnPressed(), screen);
+      //draw_digit(106, 3, minutes / 10, screen);
+      draw_digit(110, 3, minutes % 10, screen);
+      draw_digit(116, 3, seconds / 10, screen);
+      draw_digit(120, 3, seconds % 10, screen);
+
+      //show what the bitpointer is at
+      //throw in a help function so that my eyes don't hurt
+      PORTE8 = PORTE & 0xff;
+
+      draw_digit(85, 3, bitPointer, screen);
+      draw_digit(82, 3, bitPointer / 10, screen);
+      draw_digit(79, 3, bitPointer / 100, screen);
+      
+      counter++;
+      if (counter > 59)
+      {
         time -= 1;
         counter = 0;
       }
       present_screen(screen);
 
-      //if lightGamemode (btnPressed() == 0)
+      
+      //lightsgame code
+      if (counter%30 == 0 && btnPressed() != 0) //add gamemode toggle
+      {
+        //pointer logic. 
+        if (btnPressed() == 4 && bitPointer >= 7) ; //skip
+        else if(btnPressed() == 1 && bitPointer == 0) ; //skip 
+        else{
+          if (btnPressed() == 4) bitPointer += 1;
+          if (btnPressed() == 1) bitPointer -= 1;
+        }
+        
+        //selected bits logic
+        selectedBits = 0xff & (7 << bitPointer - 1);
+        if (bitPointer == 0)
+        {
+          selectedBits = 0x3;
+        }
+        
 
-      //   tempLed = 0xff;
-      //   selectedTempLed = 0xff;
-      // if (bitPointer == 7 && btnPressed() == 1)
-      // {
-      //   // skip
-      // }
-      // else if (bitPointer == 0 && btnPressed() == -1)
-      // {
-      //   // skip
-      // }
-      // else
-      // {
-      //   bitPointer += btnPressed();
-      // }
-      // if (bitPointer >= 7)
-      //   bitPointer = 7;
-      // if (bitPointer <= 0)
-      //   bitPointer = 0;
-      // selectedBits = 0xff & (7 << lightsLed - 1);
-      // if (bitPointer == 0)
-      // {
-      //   selectedBits = 0x11;
-      // }
+        // e.g if selected bits is 00111000 then tempLed would be VV000VVVV
+        // where V is the current value of lightled
+        if (btnPressed() == 3){
+          tempLed = lightsLed & (0xff & ~selectedBits);
+          selectedTempLed = ~lightsLed & selectedBits;
+          lightsLed = tempLed | selectedTempLed;
 
-      // // e.g if selected bits is 00111000 then tempLed would be VV000VVVV
-      // // where V is the current value of lightled
-      // tempLed &= lightsLed & (0xff & ~selectedBits);
-      // selectedTempLed = ~(lightsLed & selectedBits);
-      // lightsLed = tempLed | selectedTempLed;
-      // PORTE = lightsLed;
+          PORTE = lightsLed;
+        }
+      }
     }
   }
-
-  if (lightsLed == 0)
-    game = 0;
 
   // light a led
 
   // på något sätt visa vilket av ljusen man kommer släcka.
   //}
-
 
   while (1)
   {
