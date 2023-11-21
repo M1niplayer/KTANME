@@ -134,8 +134,6 @@ void set_background(int *screen, const int *background) {
   }
 }
 
-// void present_changes(const int *changes[4], const int *screen)
-
 void present_screen(const int *screen) {
   uint8_t row;
   for (row = 0; row<4; row++) {

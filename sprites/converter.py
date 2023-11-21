@@ -37,6 +37,7 @@ for fi in files:
                     astr = "0" + astr
                     has_alpha = "1"
             if (img_h<32):
+                has_alpha = "1"
                 padding = "0"*(32-img_h)
                 cstr = padding + cstr
                 astr = padding + astr
