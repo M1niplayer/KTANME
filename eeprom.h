@@ -10,7 +10,7 @@
 * Next three bit are the chip select bits (000 in this case)
 * where X is the R/W bit (0 for write, 1 for read)
 */
-#define EEPROM_CONTROL_BYTE 0x50 
+#define EEPROM_ADDRESS_BYTE 0x50 
 /* If cap was less than 64, say 16, you would have to increment the address by 16
 * each time. Issue is, the entire page endures a write regardless if the cap is 64
 * or 16 bits.
@@ -22,9 +22,9 @@
 #define I2C_PAGEWRITE_CAP 64
 
 /*anatomy of a write
-* Send start condition 
+* Send start condition (SEN = 1)
 * Send control byte with R/W bit set to 0
-* Send ACK
+* Send ACK (ACKDT = 0, ACKEN = 1)
 * send 8 MSB of address. Note that the highest bit doesn't actually matter
 * Send ACK
 * Send 8 LSB of address
@@ -32,7 +32,9 @@
 * Send data
 * Send ACK
 * Continue sending data up to 64 bytes. Send ACK after each byte.
-* Send stop condition and probably a nack (in reverse order)
+* Either send a nack (ACKDT = 1, ACKEN = 1) or a restart (RSEN = 1)
+* bla bla
+* Send stop condition (PEN = 1) clears other bits automatically (I2C slave is disabled)
 */
 
 /* Write your sick ass data at an 16 bit address
@@ -44,3 +46,8 @@
 * uint8_t[64] data. Data to be stored. Data sits in pages in EEPROM. 
 */
 void write(uint16_t address);
+uint8_t readbyte(uint16_t address);
+
+//this is set automatically via readbyte and readmany
+void write_EEPROM_adr(uint16_t address);
+void read_EEPROM_adr(uint16_t address);

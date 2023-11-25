@@ -74,6 +74,16 @@ int main(void)
   /* Turn on SPI */
   SPI2CONSET = 0x8000;
 
+  /* Set up i2c */
+	I2C1CON = 0x0;
+	/* uh, actually I don't know if the baud rate generator has to be less than 
+  khz, it's just that it only operates at either 100 or 400 khz*/
+	I2C1BRG = 0x0C2;
+	I2C1STAT = 0x0;
+	I2C1CONSET = 1 << 13; //SIDL = 1
+	I2C1CONSET = 1 << 15; // ON = 1
+	uint8_t clearRecieveBuffer = I2C1RCV; //Clear receive buffer
+
   // reset timer
   T2CON = 0;
   TMR2 = 0;
@@ -160,6 +170,7 @@ int main(void)
       draw_digit(82, 3, bitPointer / 10, screen);
       draw_digit(79, 3, bitPointer / 100, screen);
       
+      draw_digit(76, 3, selectedBits, screen);
       counter++;
       if (counter > 59)
       {
@@ -168,7 +179,7 @@ int main(void)
       }
       present_screen(screen);
 
-      
+
       //lightsgame code
       if (counter%30 == 0 && btnPressed() != 0) //add gamemode toggle
       {
