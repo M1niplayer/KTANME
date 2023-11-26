@@ -115,9 +115,9 @@ int main(void)
   uint8_t PORTE8 = 0;
 
 
-  uint16_t address = 0x0;
+  int address = 0x0;
   
-  recieveBuffer = readbyte(address);
+  recieveBuffer = read_byte(address);
   uint8_t tempLed = 0xff; //initial values
   uint8_t selectedTempLed = 0xff;
   //PORTE = 0b01001001;

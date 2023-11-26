@@ -8,7 +8,7 @@
 #include <pic32mx.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include "./i2c.h"
+#include "i2c.h"
 
 int32_t i2c_test(){
 	return 98765432;

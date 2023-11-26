@@ -36,7 +36,7 @@ void write(uint16_t address, uint8_t data){
 //maybe one for currentread
 
 //this is random read, i.e you can access any legal memory loc you want
-uint8_t read_byte(uint16_t address){
+uint8_t read_byte(int address){
     uint8_t temp;
     PORTE |= 0x2;
     //set up i2c bus with address
