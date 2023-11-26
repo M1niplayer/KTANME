@@ -62,7 +62,7 @@ void i2c_set_nack() {
 
 void i2c_recv_ack() {
 	i2c_idle();
-	while(!I2C1STAT & (1 << 15)); //
+	while(!I2C1STAT & (1 << 15)); //wait until ack has been sent
 }
 /* Send start conditon on the bus */
 void i2c_start() {
