@@ -17,6 +17,7 @@ bool i2c_send(uint8_t data);
 uint8_t i2c_recieve(uint8_t data);
 void i2c_set_ack() ; 
 void i2c_set_nack();
+void i2c_recv_ack();
 void i2c_start();
 void i2c_restart();
 void i2c_stop();

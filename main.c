@@ -85,7 +85,7 @@ int main(void)
 	I2C1STAT = 0x0;
 	I2C1CONSET = 1 << 13; //SIDL = 1
 	I2C1CONSET = 1 << 15; // ON = 1
-	int32_t recieveBuffer = I2C1RCV; //Clear receive buffer
+	uint8_t recieveBuffer = I2C1RCV; //Clear receive buffer
 
   // reset timer
   T2CON = 0;
@@ -112,15 +112,15 @@ int main(void)
 
   uint8_t selectedBits = 0xff;
   uint8_t bitPointer = 0;
-  uint8_t PORTE8 = 0;
+  uint8_t PORTE8 = 0xff;
 
 
-  int address = 0x0;
-  
-  recieveBuffer = read_byte(address);
+  int address = 0x0; //in total there are 32768 adresses. Each has 8 bits
+  //write_single_byte(address, PORTE8);
+  recieveBuffer = read_single_byte(address);
   uint8_t tempLed = 0xff; //initial values
   uint8_t selectedTempLed = 0xff;
-  //PORTE = 0b01001001;
+  PORTE = 0b01001001;
   uint8_t lightsLed = PORTE; // sätt på alla ljus 1111 1111
   // skicka också ligihtsled till skärmen
 
@@ -172,11 +172,14 @@ int main(void)
       //show what the bitpointer is at
       //throw in a help function so that my eyes don't hurt
       PORTE8 = PORTE & 0xff;
-      PORTE |= 0x01;
-      PORTE |= 0x80;
       draw_digit(85, 3, recieveBuffer, screen);
       draw_digit(82, 3, recieveBuffer /10, screen);
       draw_digit(79, 3, recieveBuffer /100, screen);
+
+      draw_digit(85, 10, address, screen);
+      draw_digit(82, 10, address /10, screen);
+      draw_digit(79, 10, address /100, screen);
+      
       //draw_digit(76, 3, selectedBits, screen);
       counter++;
       if (counter > 59)
@@ -190,6 +193,7 @@ int main(void)
       //lightsgame code
       if (counter%30 == 0 && btnPressed() != 0) //add gamemode toggle
       {
+        
         //pointer logic. 
         if (btnPressed() == 4 && bitPointer >= 7) ; //skip
         else if(btnPressed() == 1 && bitPointer == 0) ; //skip 

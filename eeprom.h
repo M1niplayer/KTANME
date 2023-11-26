@@ -46,9 +46,9 @@
 *
 * uint8_t[64] data. Data to be stored. Data sits in pages in EEPROM. 
 */
-void write(uint16_t address, uint8_t data);
-uint8_t read_byte(int address);
+void write_single_byte(int address, uint8_t data);
+uint8_t read_single_byte(int address);
 
 //this is set automatically via readbyte and readmany
-void write_EEPROM_adr(uint16_t address);
-void read_EEPROM_adr(uint16_t address);
+void write_EEPROM_adr(int address);
+void recv_EEPROM_adr(int address);

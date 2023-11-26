@@ -60,6 +60,10 @@ void i2c_set_nack() {
 	I2C1CONSET = 1 << 4; //ACKEN = 1
 }
 
+void i2c_recv_ack() {
+	i2c_idle();
+	while(!I2C1STAT & (1 << 15)); //
+}
 /* Send start conditon on the bus */
 void i2c_start() {
 	i2c_idle();
