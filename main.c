@@ -2,6 +2,9 @@
 #include <stdint.h>
 
 #include "sprites.h"
+
+#include "i2c.h"
+#include "eeprom.h"
 // #include "oled.h"
 
 int screen[128];
@@ -82,7 +85,7 @@ int main(void)
 	I2C1STAT = 0x0;
 	I2C1CONSET = 1 << 13; //SIDL = 1
 	I2C1CONSET = 1 << 15; // ON = 1
-	uint8_t clearRecieveBuffer = I2C1RCV; //Clear receive buffer
+	int32_t recieveBuffer = I2C1RCV; //Clear receive buffer
 
   // reset timer
   T2CON = 0;
@@ -111,9 +114,13 @@ int main(void)
   uint8_t bitPointer = 0;
   uint8_t PORTE8 = 0;
 
+
+  uint16_t address = 0x0;
+  
+  recieveBuffer = readbyte(address);
   uint8_t tempLed = 0xff; //initial values
   uint8_t selectedTempLed = 0xff;
-  PORTE = 0b01001001;
+  //PORTE = 0b01001001;
   uint8_t lightsLed = PORTE; // sätt på alla ljus 1111 1111
   // skicka också ligihtsled till skärmen
 
@@ -165,12 +172,12 @@ int main(void)
       //show what the bitpointer is at
       //throw in a help function so that my eyes don't hurt
       PORTE8 = PORTE & 0xff;
-
-      draw_digit(85, 3, bitPointer, screen);
-      draw_digit(82, 3, bitPointer / 10, screen);
-      draw_digit(79, 3, bitPointer / 100, screen);
-      
-      draw_digit(76, 3, selectedBits, screen);
+      PORTE |= 0x01;
+      PORTE |= 0x80;
+      draw_digit(85, 3, recieveBuffer, screen);
+      draw_digit(82, 3, recieveBuffer /10, screen);
+      draw_digit(79, 3, recieveBuffer /100, screen);
+      //draw_digit(76, 3, selectedBits, screen);
       counter++;
       if (counter > 59)
       {

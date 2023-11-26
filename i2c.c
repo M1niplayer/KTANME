@@ -8,7 +8,11 @@
 #include <pic32mx.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include "./i2c.h"
 
+int32_t i2c_test(){
+	return 98765432;
+}
 void i2c_idle() {
     //I2C1CON has SEN, RSEN, PEN, RCEN, ACKEN
     //i.e start enable, reset enable, stop enable, receive enable, acknoledge enable
@@ -18,17 +22,18 @@ void i2c_idle() {
 }
 
 /* Send one byte on I2C bus, return ack/nack status of transaction */
-void i2c_send(uint8_t data) {
+bool i2c_send(uint8_t data) {
 	i2c_idle();
 	I2C1TRN = data;
 	i2c_idle();
+	return !(I2C1STAT & (1 << 15)); //ACKSTAT
 }
 
 //true if received ack, false if not received ack
 //i.e, 1 if not received ack, 0 if received. 
-bool i2c_ackstat() {
-    return (!I2C1STAT & (1 << 15)); //ACKSTAT
-}
+//bool i2c_ackstat() {
+//    return (!I2C1STAT & (1 << 15)); //ACKSTAT
+//}
 /* Receive one byte from I2C bus */
 uint8_t i2c_recv() {
 	i2c_idle();

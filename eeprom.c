@@ -1,6 +1,7 @@
 #include <pic32mx.h>
 #include <stdint.h>
-#include "./i2c.h"
+#include "i2c.h"
+#include "eeprom.h"
 /* It's technically an adress, but it's technically also a control code
 * the entire byte will look like this:
 * 1010 000X 
@@ -23,10 +24,10 @@ void write(uint16_t address, uint8_t data){
     //I2CxBIF
     do{
         i2c_start();
-        i2c_send(EEPROM_ADDRESS_BYTE << 1); 
-    } while (!i2c_ackstat());
+         
+    } while (!i2c_send(EEPROM_ADDRESS_BYTE << 1));
     
-    i2c_ackstat();
+    i2c_send(EEPROM_ADDRESS_BYTE << 1);
     
     //make sure I2C bus is not being used
     //code
@@ -35,10 +36,12 @@ void write(uint16_t address, uint8_t data){
 //maybe one for currentread
 
 //this is random read, i.e you can access any legal memory loc you want
-uint8_t readbyte(uint16_t address){
-    //set up i2c bus with address
+uint8_t read_byte(uint16_t address){
     uint8_t temp;
+    PORTE |= 0x2;
+    //set up i2c bus with address
     read_EEPROM_adr(address);
+
     //start receiving
     temp = i2c_recv();
     i2c_set_nack();
@@ -47,10 +50,12 @@ uint8_t readbyte(uint16_t address){
 }
 
 void write_EEPROM_adr(uint16_t address){
+    PORTE |= 0x4;
     do{
         i2c_start();
-        i2c_send(EEPROM_ADDRESS_BYTE << 1); //note, random reads require write byte
-    } while (!i2c_ackstat()); //might or might not work
+         //note, random reads require write byte
+    } while (!i2c_send(EEPROM_ADDRESS_BYTE << 1)); //might or might not work
+    PORTE |= 0x8;
     //write address
     i2c_send(address >> 8);
     i2c_set_ack();
@@ -63,6 +68,6 @@ void read_EEPROM_adr(uint16_t address){
     //generate start and terminate write operation.
     do{
         i2c_start();
-        i2c_send(EEPROM_ADDRESS_BYTE << 1 | 1); //note, random reads require write byte
-    } while (!i2c_ackstat());
+         //note, random reads require write byte
+    } while (!i2c_send(EEPROM_ADDRESS_BYTE << 1 | 1));
 }

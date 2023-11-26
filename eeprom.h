@@ -2,6 +2,7 @@
 
 #include <pic32mx.h>
 #include <stdint.h>
+#include "i2c.h"
 /* It's technically an adress, but it's technically also a control code
 * the entire byte will look like this:
 * 1010 000X 
@@ -45,7 +46,7 @@
 *
 * uint8_t[64] data. Data to be stored. Data sits in pages in EEPROM. 
 */
-void write(uint16_t address);
+void write(uint16_t address, uint8_t data);
 uint8_t readbyte(uint16_t address);
 
 //this is set automatically via readbyte and readmany
