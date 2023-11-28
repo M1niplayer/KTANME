@@ -11,6 +11,7 @@ f = open("sprites.h","w")
 files = os.listdir()
 files.remove("converter.py")
 files.remove("nums.png")
+files.remove("font.png")
 for fi in files:
     if (fi[-4:] == ".png"):
         has_alpha = "0"
@@ -51,28 +52,49 @@ for fi in files:
 
 
 
-img = Image.open("nums.png", 'r')
-img_w, img_h = img.size
-pixels = list(img.getdata())
+# img = Image.open("nums.png", 'r')
+# img_w, img_h = img.size
+# pixels = list(img.getdata())
 
-color = ""
+# color = ""
 
-for x in range(img_w):
-    cstr = ""
-    for y in range(img_h):
-        rgb = pixels[x+img_w*y]
-        if (rgb == (255, 255, 255, 255)):
-            cstr = "1" + cstr
-        else:
-            cstr = "0" + cstr
-    if (img_h<8):
-        padding = "0"*(8-img_h)
-        cstr = padding + cstr
-    color += "0b" + cstr + ", "
+# for x in range(img_w):
+#     cstr = ""
+#     for y in range(img_h):
+#         rgb = pixels[x+img_w*y]
+#         if (rgb == (255, 255, 255, 255)):
+#             cstr = "1" + cstr
+#         else:
+#             cstr = "0" + cstr
+#     if (img_h<8):
+#         padding = "0"*(8-img_h)
+#         cstr = padding + cstr
+#     color += "0b" + cstr + ", "
     
-f.write("const int const num[30] = {"+color)
-if (has_alpha == "1"): f.write(alpha)
-f.write("};\n\n")
-img.close()
+# f.write("const uint8_t const num[30] = {"+color)
+# f.write("};\n\n")
+# img.close()
 
+# img = Image.open("font.png", 'r')
+# img_w, img_h = img.size
+# pixels = list(img.getdata())
+
+# color = ""
+
+# for x in range(img_w):
+#     cstr = ""
+#     for y in range(img_h):
+#         rgb = pixels[x+img_w*y]
+#         if (rgb == (255, 255, 255, 255)):
+#             cstr = "1" + cstr
+#         else:
+#             cstr = "0" + cstr
+#     if (img_h<8):
+#         padding = "0"*(8-img_h)
+#         cstr = padding + cstr
+#     color += "0b" + cstr + ", "
+    
+# f.write("const uint8_t const font[130] = {"+color)
+# f.write("};\n\n")
+# img.close()
 f.close()

@@ -75,23 +75,23 @@ int main(void) {
   T2CON = 0;
   TMR2 = 0;
 
-  PR2 =  5208; // 80 000 000MHZ / 60HZ / 256 prescaling
+  PR2 = 2604; // 80 000 000MHZ / 60HZ / 256 prescaling
   T2CONSET = 0x0070; //256 prescale
   T2CONSET = 0x8000; //start timer
 
   // enable LEDs
   TRISE = 0;
 
-  display_init();
+  screen_init();
 
-  clear_display();
+  clear_screen();
 
   uint8_t cy = 0;
   uint8_t cx = 0;
 
   uint8_t game = 1;
 
-  uint16_t time = 900;
+  uint16_t time = 2; //900;
   uint8_t counter = 0;
 
   uint8_t lightsLed = 0xff; // sätt på alla ljus 1111 1111
@@ -106,6 +106,93 @@ int main(void) {
   {
     if ((IFS(0) & 0b100000000) != 0) {
       IFSCLR(0) = 0b100000000;
+
+      if (time == 0) {
+        int animation_wait = 1000000;
+        clear_screen();
+        
+        delay(animation_wait);
+
+        set_background_pattern(0, screen);
+        draw_sprite(63, 0, explode_animation0, screen);
+        present_screen(screen);
+
+        delay(animation_wait);
+
+        draw_sprite(62, 0, explode_animation1, screen);
+        present_screen(screen);
+
+        delay(animation_wait);
+
+        set_background_pattern(0, screen);
+        draw_sprite(63, 0, explode_animation0, screen);
+        present_screen(screen);
+
+        delay(animation_wait);
+
+        clear_screen();
+
+        delay(animation_wait);
+
+        set_background_pattern(0, screen);
+        draw_sprite(63, 0, explode_animation0, screen);
+        present_screen(screen);
+
+        delay(animation_wait);
+
+        draw_sprite(61, 0, explode_animation1, screen);
+        present_screen(screen);
+
+        delay(animation_wait);
+
+        draw_sprite(56, 0, explode_animation2, screen);
+        present_screen(screen);
+
+        delay(animation_wait);
+
+        draw_sprite(51, 0, explode_animation3, screen);
+        present_screen(screen);
+
+        delay(animation_wait);
+
+        draw_sprite(40, 0, explode_animation4, screen);
+        present_screen(screen);
+
+        delay(animation_wait);
+
+        set_background_pattern(0, screen);
+        draw_sprite(11, 0, explode_animation5, screen);
+        present_screen(screen);
+
+        delay(animation_wait);
+
+        set_background_pattern(0, screen);
+        draw_sprite(6, 0, explode_animation6, screen);
+        present_screen(screen);
+
+        delay(animation_wait);
+
+        fill_screen(0xff);
+
+        delay(animation_wait*5);
+
+        fill_screen(0xee);
+
+        delay(animation_wait);
+
+        fill_screen(0x55);
+
+        delay(animation_wait);
+
+        fill_screen(0x11);
+
+        delay(animation_wait);
+        
+        clear_screen();
+        while(1){
+
+        }
+      }
 
       //button movement
       if (PORTD & (1 << 7)) {
@@ -142,8 +229,6 @@ int main(void) {
       // }
 
       set_background(screen, uidraft);
-
-      
 
       uint8_t seconds = time%60;
       uint8_t minutes = time/60;
