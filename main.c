@@ -159,6 +159,7 @@ void draw_dummy_leds(const int *screen){
     draw_sprite(10, i, dummy_led, screen);
   }
 }
+
 int main(void)
 {
   // microcontroller setup for timers, interupts, i/o, i2c, spi, etc
@@ -246,7 +247,7 @@ int main(void)
     //lightsgame code
     if (counter%30 == 0 && btnPressed() != 0) //add gamemode toggle
     {
-      draw_dummy_leds();
+      draw_dummy_leds(screen);
       //pointer logic. 
       if (btnPressed() == 4 && bitPointer >= 7) ; //skip, too far to the left
       else if(btnPressed() == 1 && bitPointer == 0) ; //skip, too far to the right
@@ -260,7 +261,8 @@ int main(void)
       if (bitPointer == 0){
         selectedBits = 0x3;
       }
-      
+      //draw pos of pointer
+      draw_sprite(10 + bitPointer * 14, 0, ledPointer, screen);
       //draw where your points is on the screen.
       // e.g if selected bits is 00111000 then tempLed would be VV000VVVV
       // where V is the current value of lightled
