@@ -50,11 +50,11 @@ void set_limits(int low, int high){
     do { //write register pointer
         i2c_start();
     } while(i2c_send(TEMP_CLIENT_ADDR << 1));
-    i2c_send(TEMP_REG_THYSTs); 
+    i2c_send(TEMP_REG_THYST); 
     i2c_recv_ack();
     i2c_send(low);
     i2c_recv_ack();
-    i2c_stop()
+    i2c_stop();
 
     do { //write register pointer
         i2c_start();
