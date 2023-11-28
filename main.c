@@ -91,9 +91,9 @@ int main(void)
   T2CON = 0;
   TMR2 = 0;
 
-  PR2 = 5208;        // 80 000 000MHZ / 10HZ / 256 prescaling
-  T2CONSET = 0x0070; // 256 prescale
-  T2CONSET = 0x8000; // start timer
+  PR2 =  5208; // 80 000 000MHZ / 60HZ / 256 prescaling
+  T2CONSET = 0x0070; //256 prescale
+  T2CONSET = 0x8000; //start timer
 
   // enable LEDs
   TRISE = 0;
@@ -130,10 +130,9 @@ int main(void)
     {
       IFSCLR(0) = 0b100000000;
 
-      if (PORTD & (1 << 7))
-      {
-        if (cx > 1)
-          cx -= 2;
+      //button movement
+      if (PORTD & (1 << 7)) {
+        if (cx>1) cx -= 2;
       }
 
       if (PORTD & (1 << 6))
@@ -154,12 +153,25 @@ int main(void)
           cx += 2;
       }
 
-      // switches
+      //switch movement
+      // if (PORTD & (1 << 11)) {
+      //   if (cx>0) cx -= 1;
+      // }
+      
+      // if (PORTD & (1 << 10)) {
+      //   if (cy>0) cy -= 1;
+      // }
 
-      // time logic
+      // if (PORTD & (1 << 9)) {
+      //   if (cy<31) cy += 1;
+      // }
+
+      // if (PORTD & (1 << 8)) {
+      //   if (cx<127) cx += 1;
+      // }
       set_background(screen, uidraft);
 
-      draw_sprite(cx, cy, cursor, screen);
+      
 
       uint8_t seconds = time % 60;
       uint8_t minutes = time / 60;
@@ -187,6 +199,7 @@ int main(void)
         time -= 1;
         counter = 0;
       }
+      draw_sprite(cx, cy, cursor, screen);
       present_screen(screen);
 
 

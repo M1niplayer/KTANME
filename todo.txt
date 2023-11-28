@@ -1,9 +1,10 @@
 ALLT
 
 
-
+lights:
+Det som ska lösa modulen är lamporna tända i hexkod
 
 ERIK:
-fancy sprite drawing, mellan rows, any y start
-sprite move, restore old pos
-efficient image format - python program that converts pngs to it, transparency, black and white
+scroll screen left/right, up down? chunks? continious?
+present changes
+fancier clock? numbers scroll to next one? eh
