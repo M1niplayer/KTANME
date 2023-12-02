@@ -61,7 +61,7 @@ void read_page(int address, uint8_t* temp){
 
     //start receiving
     int i = 0;
-    for (i = 0; i < 63; i++){
+    for (i = 0; i < I2C_PAGEWRITE_CAP - 1; i++){
         temp[i] = i2c_recv();
         i2c_set_ack();
     }
