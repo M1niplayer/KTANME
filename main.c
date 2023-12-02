@@ -182,6 +182,7 @@ void game(void){
   
   uint8_t output[64];
   read_page(0x00000000, output);
+  output[0] = 9;
 
   uint8_t currentModule = LIGHTS_OUT;
 
@@ -298,9 +299,11 @@ void game(void){
     //throw in a help function so that my eyes don't hurt
     PORTE8 = PORTE & 0xff;
     //draw whatever. 
-    draw_digit(85, 3, bitPointer, screen);
-    draw_digit(82, 3, bitPointer /10, screen);
-    draw_digit(79, 3, bitPointer /100, screen);
+    draw_digit(85, 3, output[0], screen);
+    draw_digit(82, 3, output[1] /10, screen);
+    draw_digit(79, 3, output[2] /100, screen);
+    draw_digit(76, 3, output[3] /100, screen);
+    draw_digit(73, 3, output[4] /100, screen);
     
     //draw_digit(76, 3, selectedBits, screen);
     counter++;
