@@ -195,16 +195,16 @@ int main(void)
   while(1) {
 
     uint8_t inMenu = 1;
-    while (inMenu) {
-      //timer
-      if ((IFS(0) & 0b100000000) == 0) {continue;}
-      IFSCLR(0) = 0b100000000;
-
-      cursor_movement(&cx, &cy);
-      set_background(screen, menu);
-      draw_sprite(cx, cy, cursor, screen);
-      present_screen(screen);
-    }
+    //while (inMenu) {
+    //  //timer
+    //  if ((IFS(0) & 0b100000000) == 0) {continue;}
+    //  IFSCLR(0) = 0b100000000;
+//
+    //  cursor_movement(&cx, &cy);
+    //  set_background(screen, menu);
+    //  draw_sprite(cx, cy, cursor, screen);
+    //  present_screen(screen);
+    //}
 
     uint16_t time = 900;
     uint8_t counter = 0;
@@ -215,7 +215,8 @@ int main(void)
 
     uint8_t tempLed = 0xff; //initial values
     uint8_t selectedTempLed = 0xff;
-    PORTE = 0b01001001;
+    uint8_t solvedLed = 0b01001001;
+    PORTE = solvedLed;
     uint8_t lightsLed = PORTE; // sätt på alla ljus 1111 1111
     // skicka också ligihtsled till skärmen
 
@@ -228,7 +229,14 @@ int main(void)
       //timer
       if ((IFS(0) & 0b100000000) == 0) {continue;}
       IFSCLR(0) = 0b100000000;
-      
+
+      //win condition, solve all modules
+      if (PORTE == solvedLed) {
+        game = 0;
+        break;
+      }
+
+      //lose condition
       if (time == 0) {
           explode(screen);
           
@@ -271,10 +279,12 @@ int main(void)
       if (counter%30 == 0 && btnPressed() != 0) //add gamemode toggle
       {
         //draw dummy leds
-        // uint8_t i = 0;
-        // for (i = 0; i < 8; i++){
-        //   draw_sprite(2, 2+(i*9), led, screen);
-        // }
+        uint8_t i = 0;
+        for (i = 0; i < 8; i++){
+          draw_sprite(2+(i*9), 2, led, screen);
+        }
+        draw_sprite(2+(bitPointer*9), 2, ledPointer, screen);
+
         //pointer logic. 
         if (btnPressed() == 4 && bitPointer >= 7) ; //skip, too far to the left
         else if(btnPressed() == 1 && bitPointer == 0) ; //skip, too far to the right
