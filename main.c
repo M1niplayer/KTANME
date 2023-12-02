@@ -101,8 +101,6 @@ int setup(void){
 
   uint8_t recieveBuffer = I2C1RCV; //clear receive buffer
 
-  uint8_t recieveBuffer = I2C1RCV; //clear receive buffer
-
   screen_init();
 
   clear_screen();
@@ -130,7 +128,7 @@ void button_movement(uint8_t *cx, uint8_t *cy){
   //     if (*cx < 127)
   //       *cx += 2;
   //   }
-  
+
   //switch movement
   if (PORTD & (1 << 11)) {
     if (*cx>0) *cx -= 1;
@@ -146,14 +144,6 @@ void button_movement(uint8_t *cx, uint8_t *cy){
 
   if (PORTD & (1 << 8)) {
     if (*cx<127) *cx += 1;
-  }
-}
-
-void save_state_eeprom(uint8_t* state, uint16_t time, int size){
-  int i = 0;
-  for (i = 0; i < size; i++){
-    //fast använd page write istället.
-    write_single_byte(i, state[i]);
   }
 }
 
@@ -350,7 +340,6 @@ int main(void)
   // microcontroller setup for timers, interupts, i/o, i2c, spi, etc
   setup();
   //should be in setup
-	 //Clear receive buffer
   uint8_t cy = 0;
   uint8_t cx = 0;
 
