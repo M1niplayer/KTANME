@@ -274,7 +274,7 @@ int main(void)
     uint8_t tempLed = 0xff; //initial values
     uint8_t selectedTempLed = 0xff;
     uint8_t solvedLed = 0b01001001;
-    PORTE = solvedLed;
+    PORTE = 0;
     uint8_t lightsLed = PORTE; // sätt på alla ljus 1111 1111
     // skicka också ligihtsled till skärmen
 
@@ -290,15 +290,15 @@ int main(void)
       //win condition, solve all modules
       if (PORTE == solvedLed) {
         game = 0;
-        break;
+        continue;
       }
 
       //lose condition
       if (time == 0) {
-          explode(screen);
-          
-          game = 0;
-          continue;
+        explode(screen);
+        
+        game = 0;
+        continue;
       }
 
       get_input(input);
