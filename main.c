@@ -101,6 +101,8 @@ int setup(void){
 
   TRISE = 0;
 
+  uint8_t recieveBuffer = I2C1RCV; //clear receive buffer
+
   display_init();
 
   clear_display();
@@ -153,28 +155,17 @@ void save_state_eeprom(uint8_t* state, uint16_t time, int size){
   }
 }
 
-void draw_dummy_leds(const int *screen){
-  uint8_t i = 0;
-  for (i = 0; i < 8; i++){
-    draw_sprite(10, i, dummy_led, screen);
-  }
-}
+//void draw_dummy_leds(const int *screen){
+//  uint8_t i = 0;
+//  for (i = 0; i < 8; i++){
+//    draw_sprite(10, i, dummy_led, screen);
+//  }
+//}
 
-int main(void)
-{
-  // microcontroller setup for timers, interupts, i/o, i2c, spi, etc
-  setup();
-  //should be in setup
-	uint8_t recieveBuffer = I2C1RCV; //Clear receive buffer
+void game(void){
 
-  
   uint8_t cy = 0;
   uint8_t cx = 0;
-
-  //menu logic
-  //while (inMenu) {menu boxes and The fun part yay}
-
-  //start game routine
   uint8_t game = 1;
 
   uint16_t time = 900;
@@ -184,9 +175,6 @@ int main(void)
   uint8_t bitPointer = 0;
   uint8_t PORTE8 = 0xff;
 
-  int address = 0x0; //in total there are 32768 adresses. Each has 8 bits
-  //write_single_byte(address, PORTE8);
-  recieveBuffer = read_single_byte(address);
   uint8_t tempLed = 0xff; //initial values
   uint8_t selectedTempLed = 0xff;
   PORTE = 0b01001001;
@@ -218,13 +206,9 @@ int main(void)
     //throw in a help function so that my eyes don't hurt
     PORTE8 = PORTE & 0xff;
     //draw whatever. 
-    draw_digit(85, 3, recieveBuffer, screen);
-    draw_digit(82, 3, recieveBuffer /10, screen);
-    draw_digit(79, 3, recieveBuffer /100, screen);
-
-    draw_digit(85, 10, address, screen);
-    draw_digit(82, 10, address /10, screen);
-    draw_digit(79, 10, address /100, screen);
+    draw_digit(85, 3, bitPointer, screen);
+    draw_digit(82, 3, bitPointer /10, screen);
+    draw_digit(79, 3, bitPointer /100, screen);
     
     //draw_digit(76, 3, selectedBits, screen);
     counter++;
@@ -236,18 +220,10 @@ int main(void)
     draw_sprite(cx, cy, cursor, screen);
     present_screen(screen);
 
-    //find out what module we are currently at, if even applicable.
-    //switch (currentModule) {
-    //  case (LIGHTS_OUT): 
-    // check if solved, check if we have the correct entities 
-    //    lights_out();
-//
-    //}
-
     //lightsgame code
     if (counter%30 == 0 && btnPressed() != 0) //add gamemode toggle
     {
-      draw_dummy_leds(screen);
+      //draw_dummy_leds(screen);
       //pointer logic. 
       if (btnPressed() == 4 && bitPointer >= 7) ; //skip, too far to the left
       else if(btnPressed() == 1 && bitPointer == 0) ; //skip, too far to the right
@@ -262,7 +238,7 @@ int main(void)
         selectedBits = 0x3;
       }
       //draw pos of pointer
-      draw_sprite(10 + bitPointer * 14, 0, ledPointer, screen);
+      //draw_sprite(10 + bitPointer * 14, 0, ledPointer, screen);
       //draw where your points is on the screen.
       // e.g if selected bits is 00111000 then tempLed would be VV000VVVV
       // where V is the current value of lightled
@@ -275,7 +251,25 @@ int main(void)
       }
     }
   }
-  
+}
+
+int main(void)
+{
+  // microcontroller setup for timers, interupts, i/o, i2c, spi, etc
+  setup();
+  //should be in setup
+	 //Clear receive buffer
+  uint8_t cy = 0;
+  uint8_t cx = 0;
+
+  //menu logic
+  //should show previous scores, difficulty settings, blabla
+
+  //game routine
+  game();
+
+  //when finished, do highscore input.
+  //to retry, press restart button
 
   while(1){
 
