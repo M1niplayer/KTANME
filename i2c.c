@@ -10,9 +10,6 @@
 #include <stdbool.h>
 #include "i2c.h"
 
-int32_t i2c_test(){
-	return 98765432;
-}
 void i2c_idle() {
     //I2C1CON has SEN, RSEN, PEN, RCEN, ACKEN
     //i.e start enable, reset enable, stop enable, receive enable, acknoledge enable

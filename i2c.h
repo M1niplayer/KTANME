@@ -8,8 +8,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 //On POR, at I2CxCON, only SCLREL is set to 1, everything else to 0
-
-int32_t i2c_test();
 void i2c_idle();
 bool i2c_send(uint8_t data);
 //true if received ack, false if not received ack
