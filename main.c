@@ -16,6 +16,12 @@ enum modules{
   EEPROM,
 };
 
+enum difficulty{
+  EASY,
+  MEDIUM,
+  HARD,
+};
+
 void interrupt(void)
 {
   return;
@@ -176,6 +182,17 @@ explode(const int *screen) {
   delay(animation_wait);
 }
 
+//check if cursor is pressing button, 2=press, 1=hover over, 0=not hovering at
+uint8_t virtual_button(uint8_t cx, uint8_t cy, uint8_t press, uint8_t btnX0, uint8_t btnY0, uint8_t btnX1, uint8_t btnY1) {
+  if (cx >= btnX0 && cx <= btnX1 && cy >= btnY0 && cy <= btnY1) {
+    if (press) {
+      return 2;
+    }
+    return 1;
+  }
+  return 0;
+}
+
 int main(void)
 {
   // microcontroller setup for timers, interupts, i/o, i2c, spi, etc
@@ -183,9 +200,15 @@ int main(void)
 
   int screen[128];
 
+  uint8_t input[8];
+
   //cursor coordinates
   uint8_t cx = 32;
   uint8_t cy = 16;
+
+  //intro sequence / startup goes here
+  //A GAME BY Jimmy & Erik
+  //Keep the manual close at hand
 
   //menu logic
   //should show previous scores, difficulty settings, blabla
@@ -193,21 +216,56 @@ int main(void)
 
   present_screen(screen);
   while(1) {
+    uint8_t counter = 0;
+    uint8_t difficulty = EASY;
 
     uint8_t inMenu = 1;
-    //while (inMenu) {
-    //  //timer
-    //  if ((IFS(0) & 0b100000000) == 0) {continue;}
-    //  IFSCLR(0) = 0b100000000;
-//
-    //  cursor_movement(&cx, &cy);
-    //  set_background(screen, menu);
-    //  draw_sprite(cx, cy, cursor, screen);
-    //  present_screen(screen);
-    //}
+    while (inMenu) {
+      //timer
+      if ((IFS(0) & 0b100000000) == 0) {continue;}
+      IFSCLR(0) = 0b100000000;
 
-    uint16_t time = 900;
-    uint8_t counter = 0;
+      counter++;
+      if (counter > 59)
+      {
+        counter = 0;
+      }
+
+      get_input(input);
+
+      uint8_t pointing = 0;
+      uint8_t press = (PORTD & (1 << 7));
+
+      uint8_t buttonPress = virtual_button(cx, cy, press, 2, 7, 28, 13);
+      if (buttonPress) pointing = 1;
+      if (buttonPress == 2) {
+        difficulty = EASY;
+        inMenu = 0;
+      }
+
+      buttonPress = virtual_button(cx, cy, press, 2, 15, 28, 21);
+      if (buttonPress) pointing = 1;
+      if (buttonPress == 2) {
+        difficulty = MEDIUM;
+        inMenu = 0;
+      }
+
+      buttonPress = virtual_button(cx, cy, press, 2, 13, 28, 29);
+      if (buttonPress) pointing = 1;
+      if (buttonPress == 2) {
+        difficulty = HARD;
+        inMenu = 0;
+      }
+
+      cursor_movement(&cx, &cy, input);
+      set_background(screen, menu);
+      if (pointing) draw_sprite(cx, cy, cursor_pointing, screen);
+      else draw_sprite(cx, cy, cursor, screen);
+      present_screen(screen);
+    }
+
+    uint16_t time = 900 - (difficulty*300);
+    counter = 0;
 
     uint8_t selectedBits = 0xff;
     uint8_t bitPointer = 0;
@@ -225,7 +283,6 @@ int main(void)
     uint8_t game = 1;
 
     while (game) {
-
       //timer
       if ((IFS(0) & 0b100000000) == 0) {continue;}
       IFSCLR(0) = 0b100000000;
@@ -243,9 +300,11 @@ int main(void)
           game = 0;
           continue;
       }
+
+      get_input(input);
       
       //cursor movement
-      cursor_movement(&cx, &cy);
+      cursor_movement(&cx, &cy, input);
       set_background(screen, uidraft);
 
       uint8_t seconds = time%60;
@@ -266,6 +325,7 @@ int main(void)
       draw_digit(79, 3, bitPointer /100, screen);
       
       //draw_digit(76, 3, selectedBits, screen);
+
       counter++;
       if (counter > 59)
       {
