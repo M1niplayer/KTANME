@@ -216,19 +216,3 @@ void draw_letter(uint8_t x, uint8_t y, uint8_t letter, int *screen) {
     screen[x+column] = ((screen[x+column] & (~(0x1f<<y))) | ((int)letter_c<<y));
   }
 }
-
-// void draw_sprite(uint8_t x, uint8_t y, const int *sprite, int *screen) {
-//   uint8_t width = (uint8_t)(sprite[METADATA]>>WIDTH);
-//   uint8_t height = (uint8_t)(sprite[METADATA]>>HEIGHT);
-//   uint8_t alpha = (uint8_t)(sprite[METADATA]>>ALPHA);
-
-//   uint8_t max_column = width;
-//   if (max_column + x > 128) max_column = 128-x;
-
-//   uint8_t column;
-//   for (column = 0; column<max_column; column++) {
-//     int c = sprite[column+IMAGE];
-    
-//     screen[x+column] = 0xFFFFFFFF;
-//   }
-// }

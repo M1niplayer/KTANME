@@ -5,7 +5,7 @@
 
 #include "i2c.h"
 #include "eeprom.h"
-#include "oled.h"
+//#include "oled.h"
 
 enum modules{
   LIGHTS_OUT,
@@ -14,8 +14,6 @@ enum modules{
   SIMPLE_WIRES,
   EEPROM,
 };
-
-int screen[128];
 
 void interrupt(void)
 {
@@ -108,41 +106,43 @@ int setup(void){
   return 0;
 }
 
-void button_movement(uint8_t* cx, uint8_t* cy){
-  if (PORTD & (1 << 7)) {
-      if (*cx>1) *cx -= 2;
-    }
+void button_movement(uint8_t *cx, uint8_t *cy){
+  //button movement
+  // if (PORTD & (1 << 7)) {
+  //     if (*cx>1) *cx -= 2;
+  //   }
 
-    if (PORTD & (1 << 6)){
-      if (*cy > 0)
-        *cy -= 1;
-    }
+  //   if (PORTD & (1 << 6)){
+  //     if (*cy > 0)
+  //       *cy -= 1;
+  //   }
 
-    if (PORTD & (1 << 5)){
-      if (*cy < 31)
-        *cy += 1;
-    }
+  //   if (PORTD & (1 << 5)){
+  //     if (*cy < 31)
+  //       *cy += 1;
+  //   }
 
-    if (PORTF & (1 << 1)){
-      if (*cx < 127)
-        *cx += 2;
-    }
-    //switch movement
-    // if (PORTD & (1 << 11)) {
-    //   if (cx>0) cx -= 1;
-    // }
-    
-    // if (PORTD & (1 << 10)) {
-    //   if (cy>0) cy -= 1;
-    // }
+  //   if (PORTF & (1 << 1)){
+  //     if (*cx < 127)
+  //       *cx += 2;
+  //   }
+  
+  //switch movement
+  if (PORTD & (1 << 11)) {
+    if (*cx>0) *cx -= 1;
+  }
+  
+  if (PORTD & (1 << 10)) {
+    if (*cy>0) *cy -= 1;
+  }
 
-    // if (PORTD & (1 << 9)) {
-    //   if (cy<31) cy += 1;
-    // }
+  if (PORTD & (1 << 9)) {
+    if (*cy<31) *cy += 1;
+  }
 
-    // if (PORTD & (1 << 8)) {
-    //   if (cx<127) cx += 1;
-    // }
+  if (PORTD & (1 << 8)) {
+    if (*cx<127) *cx += 1;
+  }
 }
 
 void save_state_eeprom(uint8_t* state, uint16_t time, int size){
@@ -156,7 +156,7 @@ void save_state_eeprom(uint8_t* state, uint16_t time, int size){
 void draw_dummy_leds(const int *screen){
   uint8_t i = 0;
   for (i = 0; i < 8; i++){
-    draw_sprite(10, i, dummy_led, screen);
+    draw_sprite(10, i, led, screen);
   }
 }
 
@@ -177,7 +177,7 @@ int main(void)
   //start game routine
   uint8_t game = 1;
 
-  uint16_t time = 2; //900;
+  uint16_t time = 900;
   uint8_t counter = 0;
 
   uint8_t selectedBits = 0xff;
@@ -194,6 +194,8 @@ int main(void)
   // skicka också ligihtsled till skärmen
 
   uint8_t currentModule = LIGHTS_OUT;
+
+  int screen[128];
 
   while (game)
   {
