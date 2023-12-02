@@ -90,24 +90,6 @@ int setup(void){
   return 0;
 }
 
-pack_score(uint8_t c0, uint8_t c1, uint8_t c2, uint16_t time, uint8_t *packed0, uint8_t *packed1, uint8_t *packed2) {
-  int pack = (c0%26) + ((c1%26)*26) + ((c2%26)*26*26) + ((time%900)*26*26*26);
-  *packed0 = pack&0xFF;
-  *packed1 = (pack>>8)&0xFF;
-  *packed2 = (pack>>16)&0xFF;
-}
-
-unpack_score(uint8_t *c0, uint8_t *c1, uint8_t *c2, uint16_t *time, uint8_t packed0, uint8_t packed1, uint8_t packed2) {
-  int pack = packed0 + (packed1*256) + (packed2*256*256);
-  *c0 = pack%26;
-  pack /= 26;
-  *c1 = pack%26;
-  pack /= 26;
-  *c2 = pack%26;
-  pack /= 26;
-  *time = pack%900;
-}
-
 int main(void)
 {
   // microcontroller setup for timers, interupts, i/o, i2c, spi, etc
@@ -123,32 +105,7 @@ int main(void)
   //should show previous scores, difficulty settings, blabla
   set_background_pattern(0, screen);
 
-  uint8_t l0 = 0;
-  uint8_t l1 = 2;
-  uint8_t l2 = 4;
   uint16_t time = 300;
-
-  uint8_t pack0;
-  uint8_t pack1;
-  uint8_t pack2;
-  pack_score(l0, l1, l2, time, &pack0, &pack1, &pack2);
-  uint8_t c0 = 0;
-  uint8_t c1 = 0;
-  uint8_t c2 = 0;
-  uint16_t t = 0;
-  unpack_score(&c0, &c1, &c2, &t, pack0, pack1, pack2);
-  
-  draw_letter(0, 0, c0, screen);
-  draw_letter(6, 0, c1, screen);
-  draw_letter(12, 0, c2, screen);
-
-  uint8_t seconds = t%60;
-  uint8_t minutes = t/60;
-
-  draw_digit(106, 3, minutes/10, screen);
-  draw_digit(110, 3, minutes%10, screen);
-  draw_digit(116, 3, seconds/10, screen);
-  draw_digit(120, 3, seconds%10, screen);
 
   present_screen(screen);
   while(1) {
