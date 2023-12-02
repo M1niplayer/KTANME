@@ -5,6 +5,7 @@
 
 #include "i2c.h"
 #include "eeprom.h"
+#include "highscore.h"
 //#include "oled.h"
 
 enum modules{
@@ -170,6 +171,17 @@ void game(void){
   PORTE = 0b01001001;
   uint8_t lightsLed = PORTE; // sätt på alla ljus 1111 1111
   // skicka också ligihtsled till skärmen
+
+
+  uint8_t test[64];
+  uint8_t counterAgain = 0;
+  for (counterAgain = 0; counterAgain < 64; counterAgain++){
+    test[counterAgain] = counterAgain;
+  }
+  write_page(0x00000000, test);
+  
+  uint8_t output[64];
+  read_page(0x00000000, output);
 
   uint8_t currentModule = LIGHTS_OUT;
 
