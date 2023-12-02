@@ -17,7 +17,7 @@
 //};
 void write_single_byte(int address, uint8_t data){
     //set up i2c bus with address
-    write_EEPROM_adr(address);
+    _write_EEPROM_adr(address);
     //could do something with interrputs
     //I2CxMIF, master interupt
     //probably have to handle bus collisions
@@ -32,7 +32,7 @@ void write_single_byte(int address, uint8_t data){
 uint8_t read_single_byte(int address){
     uint8_t temp;
     //set up i2c bus with address so that we can receive
-    recv_EEPROM_adr(address);
+    _recv_EEPROM_adr(address);
 
     //start receiving
     temp = i2c_recv();
@@ -45,7 +45,7 @@ take caution in making sure that you don't overwrite
 data when you do page unaligned writes */
 void write_page(int address, uint8_t* data){
     //set up i2c bus with address
-    write_EEPROM_adr(address);
+    _write_EEPROM_adr(address);
     //send data
     int i = 0;
     for (i = 0; i < 64; i++){
@@ -55,10 +55,9 @@ void write_page(int address, uint8_t* data){
     i2c_stop();
 }
 //must be 64 bit size array
-uint8_t* read_page(int address){
-    uint8_t temp[64];
+void read_page(int address, uint8_t* temp){
     //set up i2c bus with address so that we can receive
-    recv_EEPROM_adr(address);
+    _recv_EEPROM_adr(address);
 
     //start receiving
     int i = 0;
@@ -66,13 +65,12 @@ uint8_t* read_page(int address){
         temp[i] = i2c_recv();
         i2c_set_ack();
     }
-    temp[64] = i2c_recv();
+    temp[63] = i2c_recv();
     i2c_set_nack(); //important
     i2c_stop();
-    return temp;
 }
 
-void write_EEPROM_adr(int address){
+void _write_EEPROM_adr(int address){
     do{
         i2c_start();
          //note, random reads require write byte
@@ -84,8 +82,8 @@ void write_EEPROM_adr(int address){
     i2c_recv_ack();
 }
 
-void recv_EEPROM_adr(int address){
-    write_EEPROM_adr(address);
+void _recv_EEPROM_adr(int address){
+    _write_EEPROM_adr(address);
     //generate start and terminate write operation.
     i2c_start();
     i2c_send(EEPROM_CLIENT_ADDRESS << 1 | 1);

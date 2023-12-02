@@ -48,9 +48,9 @@
 */
 void write_single_byte(int address, uint8_t data);
 uint8_t read_single_byte(int address);
-uint8_t* read_page(int address);
+void read_page(int address, uint8_t* temp);
 
 //this is set automatically via readbyte and readmany
-void write_EEPROM_adr(int address);
-void recv_EEPROM_adr(int address);
+void _write_EEPROM_adr(int address);
+void _recv_EEPROM_adr(int address);
 void write_page(int address, uint8_t* data);
