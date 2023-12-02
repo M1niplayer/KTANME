@@ -26,23 +26,6 @@ void delay(int cyc)
   for (i = cyc; i > 0; i--);
 }
 
-int btnPressed()
-{
-  if (PORTF & (1 << 1))
-    return 1; // BTN1
-
-  if (PORTD & (1 << 5))
-    return 2; // BTN2
-
-  if (PORTD & (1 << 6))
-   return 3; // BTN3
-
-  if (PORTD & (1 << 7))
-    return 4; // BTN4
-
-  return 0;
-}
-
 int setup(void){
 /* Set up peripheral bus clock */
   OSCCON &= ~0x180000;
@@ -106,59 +89,77 @@ int setup(void){
   return 0;
 }
 
-void button_movement(uint8_t *cx, uint8_t *cy){
-  //button movement
-  // if (PORTD & (1 << 7)) {
-  //     if (*cx>1) *cx -= 2;
-  //   }
-
-  //   if (PORTD & (1 << 6)){
-  //     if (*cy > 0)
-  //       *cy -= 1;
-  //   }
-
-  //   if (PORTD & (1 << 5)){
-  //     if (*cy < 31)
-  //       *cy += 1;
-  //   }
-
-  //   if (PORTF & (1 << 1)){
-  //     if (*cx < 127)
-  //       *cx += 2;
-  //   }
-
-  //switch movement
-  if (PORTD & (1 << 11)) {
-    if (*cx>0) *cx -= 1;
-  }
-  
-  if (PORTD & (1 << 10)) {
-    if (*cy>0) *cy -= 1;
-  }
-
-  if (PORTD & (1 << 9)) {
-    if (*cy<31) *cy += 1;
-  }
-
-  if (PORTD & (1 << 8)) {
-    if (*cx<127) *cx += 1;
-  }
+pack_score(uint8_t c0, uint8_t c1, uint8_t c2, uint16_t time, uint8_t *packed0, uint8_t *packed1, uint8_t *packed2) {
+  int pack = (c0%26) + ((c1%26)*26) + ((c2%26)*26*26) + ((time%900)*26*26*26);
+  *packed0 = pack&0xFF;
+  *packed1 = (pack>>8)&0xFF;
+  *packed2 = (pack>>16)&0xFF;
 }
 
-void draw_dummy_leds(const int *screen){
-  uint8_t i = 0;
-  for (i = 0; i < 8; i++){
-    draw_sprite(10, i, led, screen);
-  }
+unpack_score(uint8_t *c0, uint8_t *c1, uint8_t *c2, uint16_t *time, uint8_t packed0, uint8_t packed1, uint8_t packed2) {
+  int pack = packed0 + (packed1*256) + (packed2*256*256);
+  *c0 = pack%26;
+  pack /= 26;
+  *c1 = pack%26;
+  pack /= 26;
+  *c2 = pack%26;
+  pack /= 26;
+  *time = pack%900;
 }
 
-void game(void){
+int main(void)
+{
+  // microcontroller setup for timers, interupts, i/o, i2c, spi, etc
+  setup();
 
-  uint8_t cy = 0;
+  int screen[128];
+
+  //cursor coordinates
   uint8_t cx = 0;
+  uint8_t cy = 0;
+
+  //menu logic
+  //should show previous scores, difficulty settings, blabla
+  set_background_pattern(0, screen);
+
+  uint8_t l0 = 0;
+  uint8_t l1 = 2;
+  uint8_t l2 = 4;
+  uint16_t time = 300;
+
+  uint8_t pack0;
+  uint8_t pack1;
+  uint8_t pack2;
+  pack_score(l0, l1, l2, time, &pack0, &pack1, &pack2);
+  uint8_t c0 = 0;
+  uint8_t c1 = 0;
+  uint8_t c2 = 0;
+  uint16_t t = 0;
+  unpack_score(&c0, &c1, &c2, &t, pack0, pack1, pack2);
+  
+  draw_letter(0, 0, c0, screen);
+  draw_letter(6, 0, c1, screen);
+  draw_letter(12, 0, c2, screen);
+
+  uint8_t seconds = t%60;
+  uint8_t minutes = t/60;
+
+  draw_digit(106, 3, minutes/10, screen);
+  draw_digit(110, 3, minutes%10, screen);
+  draw_digit(116, 3, seconds/10, screen);
+  draw_digit(120, 3, seconds%10, screen);
+
+  present_screen(screen);
+  while(1) {
+
+  }
+
+  set_background(screen, menu);
+
+  //game routine
   uint8_t game = 1;
 
-  uint16_t time = 900;
+  //uint16_t time = 900;
   uint8_t counter = 0;
 
   uint8_t selectedBits = 0xff;
@@ -172,8 +173,6 @@ void game(void){
   // skicka också ligihtsled till skärmen
 
   uint8_t currentModule = LIGHTS_OUT;
-
-  int screen[128];
 
   while (game)
   {
@@ -264,13 +263,15 @@ void game(void){
         delay(animation_wait);
         
         clear_screen();
-        while(1){
 
-        }
+        delay(animation_wait);
+        
+        game = 0;
+        continue;
     }
     
-    //button movement
-    button_movement(&cx, &cy);
+    //cursor movement
+    cursor_movement(&cx, &cy);
     set_background(screen, uidraft);
 
     uint8_t seconds = time%60;
@@ -303,7 +304,11 @@ void game(void){
     //lightsgame code
     if (counter%30 == 0 && btnPressed() != 0) //add gamemode toggle
     {
-      //draw_dummy_leds(screen);
+      //draw dummy leds
+      // uint8_t i = 0;
+      // for (i = 0; i < 8; i++){
+      //   draw_sprite(2, 2+(i*9), led, screen);
+      // }
       //pointer logic. 
       if (btnPressed() == 4 && bitPointer >= 7) ; //skip, too far to the left
       else if(btnPressed() == 1 && bitPointer == 0) ; //skip, too far to the right
@@ -331,21 +336,6 @@ void game(void){
       }
     }
   }
-}
-
-int main(void)
-{
-  // microcontroller setup for timers, interupts, i/o, i2c, spi, etc
-  setup();
-  //should be in setup
-  uint8_t cy = 0;
-  uint8_t cx = 0;
-
-  //menu logic
-  //should show previous scores, difficulty settings, blabla
-
-  //game routine
-  game();
 
   //when finished, do highscore input.
   //to retry, press restart button
