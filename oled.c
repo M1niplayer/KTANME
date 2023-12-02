@@ -1,7 +1,9 @@
 #include <pic32mx.h>
 #include <stdint.h>
 
-const int const num[30] = {0b00001110, 0b00010001, 0b00001110, 0b00000010, 0b00011111, 0b00000000, 0b00010010, 0b00011001, 0b00010110, 0b00010001, 0b00010101, 0b00001010, 0b00000111, 0b00000100, 0b00011111, 0b00010111, 0b00010101, 0b00001001, 0b00001110, 0b00010101, 0b00001000, 0b00000001, 0b00011001, 0b00000111, 0b00001010, 0b00010101, 0b00001010, 0b00000010, 0b00010101, 0b00001110, };
+const uint8_t const num[30] = {0b00001110, 0b00010001, 0b00001110, 0b00000010, 0b00011111, 0b00000000, 0b00010010, 0b00011001, 0b00010110, 0b00010001, 0b00010101, 0b00001010, 0b00000111, 0b00000100, 0b00011111, 0b00010111, 0b00010101, 0b00001001, 0b00001110, 0b00010101, 0b00001000, 0b00000001, 0b00011001, 0b00000111, 0b00001010, 0b00010101, 0b00001010, 0b00000010, 0b00010101, 0b00001110};
+
+const uint8_t const font[130] = {0b00011100, 0b00001010, 0b00001001, 0b00001010, 0b00011100, 0b00011111, 0b00010101, 0b00010101, 0b00010101, 0b00001010, 0b00001110, 0b00010001, 0b00010001, 0b00010001, 0b00001010, 0b00011111, 0b00010001, 0b00010001, 0b00010001, 0b00001110, 0b00011111, 0b00010101, 0b00010101, 0b00010101, 0b00010001, 0b00011111, 0b00000101, 0b00000101, 0b00000101, 0b00000001, 0b00001110, 0b00010001, 0b00010001, 0b00010101, 0b00001101, 0b00011111, 0b00000100, 0b00000100, 0b00000100, 0b00011111, 0b00010001, 0b00010001, 0b00011111, 0b00010001, 0b00010001, 0b00001000, 0b00010000, 0b00010001, 0b00001111, 0b00000001, 0b00011111, 0b00000100, 0b00000100, 0b00001010, 0b00010001, 0b00011111, 0b00010000, 0b00010000, 0b00010000, 0b00010000, 0b00011111, 0b00000001, 0b00000010, 0b00000001, 0b00011111, 0b00011111, 0b00000010, 0b00000100, 0b00001000, 0b00011111, 0b00001110, 0b00010001, 0b00010001, 0b00010001, 0b00001110, 0b00011111, 0b00000101, 0b00000101, 0b00000101, 0b00000010, 0b00001110, 0b00010001, 0b00010001, 0b00001001, 0b00010110, 0b00011111, 0b00000101, 0b00000101, 0b00000101, 0b00011010, 0b00010010, 0b00010101, 0b00010101, 0b00010101, 0b00001001, 0b00000001, 0b00000001, 0b00011111, 0b00000001, 0b00000001, 0b00001111, 0b00010000, 0b00010000, 0b00010000, 0b00001111, 0b00000011, 0b00001100, 0b00010000, 0b00001100, 0b00000011, 0b00001111, 0b00010000, 0b00001000, 0b00010000, 0b00001111, 0b00010001, 0b00001010, 0b00000100, 0b00001010, 0b00010001, 0b00000001, 0b00000010, 0b00011100, 0b00000010, 0b00000001, 0b00010001, 0b00011001, 0b00010101, 0b00010011, 0b00010001};
 
 #define METADATA 0
 #define WIDTH 8
@@ -30,7 +32,7 @@ uint8_t spi_send_recv(uint8_t data) {
 	return SPI2BUF;
 }
 
-void display_init() {
+void screen_init() {
   //power on
 	DISPLAY_COMMAND_DATA_PORT &= ~DISPLAY_COMMAND_DATA_MASK;
 	delay(10);
@@ -84,17 +86,22 @@ void set_pos(uint8_t column, uint8_t row) {
   DISPLAY_COMMAND_DATA_PORT |= DISPLAY_COMMAND_DATA_MASK;
 }
 
-void clear_display() {
+//fill screen with white, black, or stripes
+void fill_screen(uint8_t pattern) {
   int r;
   for (r = 0; r<4; r++) {
     set_pos(0, r);
     
-    //set everything to black
     int i;
     for (i = 0; i<128; i++) {
-      spi_send_recv(0);
+      spi_send_recv(pattern);
     }
   }
+}
+
+void clear_screen() {
+  //set everything to black
+  fill_screen(0);
 }
 
 // print a sprite directly to anywhere on the oled screen, but overwrites the columns it overlaps
@@ -134,6 +141,13 @@ void set_background(int *screen, const int *background) {
   }
 }
 
+void set_background_pattern(int pattern, int *screen) {
+  uint8_t i;
+  for (i = 0; i<128; i++) {
+    screen[i] = pattern;
+  }
+}
+
 void present_screen(const int *screen) {
   uint8_t row;
   for (row = 0; row<4; row++) {
@@ -170,6 +184,14 @@ void draw_sprite(uint8_t x, uint8_t y, const int *sprite, int *screen) {
       
       screen[x+column] = ((screen[x+column] & (~(sprite_a<<y))) | (sprite_c<<y)); //((sprite_c & sprite_a)<<y))
     }
+  } else {
+    uint8_t column;
+    for (column = 0; column<max_column; column++) {
+
+      int sprite_c = sprite[column+IMAGE];
+
+      screen[x+column] = sprite_c<<y; //((sprite_c & sprite_a)<<y))
+    }
   }
 }
 
@@ -184,18 +206,13 @@ void draw_digit(uint8_t x, uint8_t y, uint8_t digit, int *screen) {
   }
 }
 
-// void draw_sprite(uint8_t x, uint8_t y, const int *sprite, int *screen) {
-//   uint8_t width = (uint8_t)(sprite[METADATA]>>WIDTH);
-//   uint8_t height = (uint8_t)(sprite[METADATA]>>HEIGHT);
-//   uint8_t alpha = (uint8_t)(sprite[METADATA]>>ALPHA);
-
-//   uint8_t max_column = width;
-//   if (max_column + x > 128) max_column = 128-x;
-
-//   uint8_t column;
-//   for (column = 0; column<max_column; column++) {
-//     int c = sprite[column+IMAGE];
+void draw_letter(uint8_t x, uint8_t y, uint8_t letter, int *screen) {
+  letter = letter%26;
+  uint8_t column;
+  for (column = 0; column<128-x; column++) {
+    if (column>4) break;
+    int letter_c = font[(letter*5)+column];
     
-//     screen[x+column] = 0xFFFFFFFF;
-//   }
-// }
+    screen[x+column] = ((screen[x+column] & (~(0x1f<<y))) | ((int)letter_c<<y));
+  }
+}

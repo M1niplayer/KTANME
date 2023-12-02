@@ -5,7 +5,7 @@
 
 #include "i2c.h"
 #include "eeprom.h"
-#include "oled.h"
+//#include "oled.h"
 
 enum modules{
   LIGHTS_OUT,
@@ -14,8 +14,6 @@ enum modules{
   SIMPLE_WIRES,
   EEPROM,
 };
-
-int screen[128];
 
 void interrupt(void)
 {
@@ -95,7 +93,7 @@ int setup(void){
   T2CON = 0;
   TMR2 = 0;
 
-  PR2 =  5208; // 80 000 000MHZ / 60HZ / 256 prescaling
+  PR2 = 2604; // 80 000 000MHZ / 60HZ / 256 prescaling
   T2CONSET = 0x0070; //256 prescale
   T2CONSET = 0x8000; //start timer
 
@@ -103,48 +101,52 @@ int setup(void){
 
   uint8_t recieveBuffer = I2C1RCV; //clear receive buffer
 
-  display_init();
+  uint8_t recieveBuffer = I2C1RCV; //clear receive buffer
 
-  clear_display();
+  screen_init();
+
+  clear_screen();
 
   return 0;
 }
 
-void button_movement(uint8_t* cx, uint8_t* cy){
-  if (PORTD & (1 << 7)) {
-      if (*cx>1) *cx -= 2;
-    }
+void button_movement(uint8_t *cx, uint8_t *cy){
+  //button movement
+  // if (PORTD & (1 << 7)) {
+  //     if (*cx>1) *cx -= 2;
+  //   }
 
-    if (PORTD & (1 << 6)){
-      if (*cy > 0)
-        *cy -= 1;
-    }
+  //   if (PORTD & (1 << 6)){
+  //     if (*cy > 0)
+  //       *cy -= 1;
+  //   }
 
-    if (PORTD & (1 << 5)){
-      if (*cy < 31)
-        *cy += 1;
-    }
+  //   if (PORTD & (1 << 5)){
+  //     if (*cy < 31)
+  //       *cy += 1;
+  //   }
 
-    if (PORTF & (1 << 1)){
-      if (*cx < 127)
-        *cx += 2;
-    }
-    //switch movement
-    // if (PORTD & (1 << 11)) {
-    //   if (cx>0) cx -= 1;
-    // }
-    
-    // if (PORTD & (1 << 10)) {
-    //   if (cy>0) cy -= 1;
-    // }
+  //   if (PORTF & (1 << 1)){
+  //     if (*cx < 127)
+  //       *cx += 2;
+  //   }
+  
+  //switch movement
+  if (PORTD & (1 << 11)) {
+    if (*cx>0) *cx -= 1;
+  }
+  
+  if (PORTD & (1 << 10)) {
+    if (*cy>0) *cy -= 1;
+  }
 
-    // if (PORTD & (1 << 9)) {
-    //   if (cy<31) cy += 1;
-    // }
+  if (PORTD & (1 << 9)) {
+    if (*cy<31) *cy += 1;
+  }
 
-    // if (PORTD & (1 << 8)) {
-    //   if (cx<127) cx += 1;
-    // }
+  if (PORTD & (1 << 8)) {
+    if (*cx<127) *cx += 1;
+  }
 }
 
 void save_state_eeprom(uint8_t* state, uint16_t time, int size){
@@ -155,12 +157,12 @@ void save_state_eeprom(uint8_t* state, uint16_t time, int size){
   }
 }
 
-//void draw_dummy_leds(const int *screen){
-//  uint8_t i = 0;
-//  for (i = 0; i < 8; i++){
-//    draw_sprite(10, i, dummy_led, screen);
-//  }
-//}
+void draw_dummy_leds(const int *screen){
+  uint8_t i = 0;
+  for (i = 0; i < 8; i++){
+    draw_sprite(10, i, led, screen);
+  }
+}
 
 void game(void){
 
@@ -183,24 +185,114 @@ void game(void){
 
   uint8_t currentModule = LIGHTS_OUT;
 
+  int screen[128];
+
   while (game)
   {
+
     //timer
     if ((IFS(0) & 0b100000000) == 0) {continue;}
     IFSCLR(0) = 0b100000000;
+    
+    if (time == 0) {
+        int animation_wait = 1000000;
+        clear_screen();
+        
+        delay(animation_wait);
+
+        set_background_pattern(0, screen);
+        draw_sprite(63, 0, explode_animation0, screen);
+        present_screen(screen);
+
+        delay(animation_wait);
+
+        draw_sprite(62, 0, explode_animation1, screen);
+        present_screen(screen);
+
+        delay(animation_wait);
+
+        set_background_pattern(0, screen);
+        draw_sprite(63, 0, explode_animation0, screen);
+        present_screen(screen);
+
+        delay(animation_wait);
+
+        clear_screen();
+
+        delay(animation_wait);
+
+        set_background_pattern(0, screen);
+        draw_sprite(63, 0, explode_animation0, screen);
+        present_screen(screen);
+
+        delay(animation_wait);
+
+        draw_sprite(61, 0, explode_animation1, screen);
+        present_screen(screen);
+
+        delay(animation_wait);
+
+        draw_sprite(56, 0, explode_animation2, screen);
+        present_screen(screen);
+
+        delay(animation_wait);
+
+        draw_sprite(51, 0, explode_animation3, screen);
+        present_screen(screen);
+
+        delay(animation_wait);
+
+        draw_sprite(40, 0, explode_animation4, screen);
+        present_screen(screen);
+
+        delay(animation_wait);
+
+        set_background_pattern(0, screen);
+        draw_sprite(11, 0, explode_animation5, screen);
+        present_screen(screen);
+
+        delay(animation_wait);
+
+        set_background_pattern(0, screen);
+        draw_sprite(6, 0, explode_animation6, screen);
+        present_screen(screen);
+
+        delay(animation_wait);
+
+        fill_screen(0xff);
+
+        delay(animation_wait*5);
+
+        fill_screen(0xee);
+
+        delay(animation_wait);
+
+        fill_screen(0x55);
+
+        delay(animation_wait);
+
+        fill_screen(0x11);
+
+        delay(animation_wait);
+        
+        clear_screen();
+        while(1){
+
+        }
+    }
+    
     //button movement
     button_movement(&cx, &cy);
     set_background(screen, uidraft);
 
-    uint8_t seconds = time % 60;
-    uint8_t minutes = time / 60;
-
+    uint8_t seconds = time%60;
+    uint8_t minutes = time/60;
+    
     //draw time
-    draw_digit(106, 3, btnPressed(), screen);
-    //draw_digit(106, 3, minutes / 10, screen);
-    draw_digit(110, 3, minutes % 10, screen);
-    draw_digit(116, 3, seconds / 10, screen);
-    draw_digit(120, 3, seconds % 10, screen);
+    draw_digit(106, 3, minutes/10, screen);
+    draw_digit(110, 3, minutes%10, screen);
+    draw_digit(116, 3, seconds/10, screen);
+    draw_digit(120, 3, seconds%10, screen);
 
     //show what the bitpointer is at
     //throw in a help function so that my eyes don't hurt
