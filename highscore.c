@@ -1,12 +1,12 @@
 #include "highscore.h"
 
-void save_highscore(char *name, uint8_t score){
+void save_highscore(uint8_t char0, uint8_t char1, uint8_t char2, uint8_t score){
     //optimized to reduce amount of page writes
     //check how many scores there are
     uint8_t bitpackedByte0 = 0;
     uint8_t bitpackedByte1 = 0;
     uint8_t bitpackedByte2 = 0;
-    _pack_score(name[0], name[1], name[2], score, &bitpackedByte0, &bitpackedByte1, &bitpackedByte2);
+    _pack_score(char0, char1, char2, score, &bitpackedByte0, &bitpackedByte1, &bitpackedByte2);
 
     uint8_t ctScores = read_single_byte(0x003f);
     uint8_t scoreList[64]; 
@@ -41,7 +41,7 @@ void save_highscore(char *name, uint8_t score){
                 scoreList[j*3 + 2] = scoreList[(j-1)*3 + 2];
             }
             //insert new score
-            _pack_score(name[0], name[1], name[2], score, &bitpackedByte0, &bitpackedByte1, &bitpackedByte2);
+            _pack_score(char0, char1, char2, score, &bitpackedByte0, &bitpackedByte1, &bitpackedByte2);
             scoreList[i*3] = bitpackedByte0;
             scoreList[i*3 + 1] = bitpackedByte1;
             scoreList[i*3 + 2] = bitpackedByte2;
