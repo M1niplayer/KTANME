@@ -200,6 +200,8 @@ int main(void)
 
   int screen[128];
 
+  uint8_t input[8];
+
   //cursor coordinates
   uint8_t cx = 32;
   uint8_t cy = 16;
@@ -229,6 +231,8 @@ int main(void)
         counter = 0;
       }
 
+      get_input(input);
+
       uint8_t pointing = 0;
       uint8_t press = (PORTD & (1 << 7));
 
@@ -253,7 +257,7 @@ int main(void)
         inMenu = 0;
       }
 
-      if ((counter%3)==0) cursor_movement(&cx, &cy);
+      cursor_movement(&cx, &cy, input);
       set_background(screen, menu);
       if (pointing) draw_sprite(cx, cy, cursor_pointing, screen);
       else draw_sprite(cx, cy, cursor, screen);
@@ -288,9 +292,11 @@ int main(void)
           game = 0;
           continue;
       }
+
+      get_input(input);
       
       //cursor movement
-      if ((counter%3)==0) cursor_movement(&cx, &cy);
+      cursor_movement(&cx, &cy, input);
       set_background(screen, uidraft);
 
       uint8_t seconds = time%60;
