@@ -17,15 +17,13 @@ enum modules{
 
 void interrupt(void)
 {
-  // timerrrs
   return;
 }
 
 void delay(int cyc)
 {
   int i;
-  for (i = cyc; i > 0; i--)
-    ;
+  for (i = cyc; i > 0; i--);
 }
 
 int btnPressed()
