@@ -1,11 +1,12 @@
 COPYRIGHT NOTICE FOR FILES stubs.c, vectors.S, Makefile, OLED Screen base code in main.c
-
+I2C.c and I2C.h
 
 Copyright (c) 2015, Axel Isaksson
 Copyright (c) 2015, F Lundevall
 
 If you're a student, and you have modified one or more files,
 you must add your name here.
+Jimmy Tran 2023
 
 Redistribution and use in source and binary forms, with or without
 modification, are permitted provided that the following conditions
