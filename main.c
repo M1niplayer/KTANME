@@ -5,6 +5,7 @@
 
 #include "i2c.h"
 #include "eeprom.h"
+#include "highscore.h"
 //#include "oled.h"
 
 enum modules{
@@ -175,24 +176,6 @@ explode(const int *screen) {
   delay(animation_wait);
 }
 
-pack_score(uint8_t c0, uint8_t c1, uint8_t c2, uint16_t time, uint8_t *packed0, uint8_t *packed1, uint8_t *packed2) {
-  int pack = (c0%26) + ((c1%26)*26) + ((c2%26)*26*26) + ((time%900)*26*26*26);
-  *packed0 = pack&0xFF;
-  *packed1 = (pack>>8)&0xFF;
-  *packed2 = (pack>>16)&0xFF;
-}
-
-unpack_score(uint8_t *c0, uint8_t *c1, uint8_t *c2, uint16_t *time, uint8_t packed0, uint8_t packed1, uint8_t packed2) {
-  int pack = packed0 + (packed1*256) + (packed2*256*256);
-  *c0 = pack%26;
-  pack /= 26;
-  *c1 = pack%26;
-  pack /= 26;
-  *c2 = pack%26;
-  pack /= 26;
-  *time = pack%900;
-}
-
 int main(void)
 {
   // microcontroller setup for timers, interupts, i/o, i2c, spi, etc
@@ -223,9 +206,6 @@ int main(void)
       present_screen(screen);
     }
 
-    //game routine
-    uint8_t game = 1;
-
     uint16_t time = 900;
     uint8_t counter = 0;
 
@@ -241,8 +221,9 @@ int main(void)
 
     uint8_t currentModule = LIGHTS_OUT;
 
-    while (game)
-    {
+    uint8_t game = 1;
+
+    while (game) {
 
       //timer
       if ((IFS(0) & 0b100000000) == 0) {continue;}
