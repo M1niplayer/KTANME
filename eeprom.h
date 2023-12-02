@@ -25,16 +25,14 @@
 /*anatomy of a write
 * Send start condition (SEN = 1)
 * Send control byte with R/W bit set to 0
-* Send ACK (ACKDT = 0, ACKEN = 1)
+* Receive ACK 
 * send 8 MSB of address. Note that the highest bit doesn't actually matter
-* Send ACK
+* Receive ACK
 * Send 8 LSB of address
-* Send ACK
+* Receive ACK
 * Send data
-* Send ACK
-* Continue sending data up to 64 bytes. Send ACK after each byte.
-* Either send a nack (ACKDT = 1, ACKEN = 1) or a restart (RSEN = 1)
-* bla bla
+* Receive ACK
+* Continue sending data up to 64 bytes. Receive ACK after each byte.
 * Send stop condition (PEN = 1) clears other bits automatically (I2C slave is disabled)
 */
 
