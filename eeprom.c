@@ -15,7 +15,7 @@
 //void write(uint16_t address, uint8_t[64] data){
 //    //the same thing except 64 times
 //};
-void write_single_byte(int address, uint8_t data){
+void write_single_byte(uint16_t address, uint8_t data){
     //set up i2c bus with address
     _write_EEPROM_adr(address);
     //could do something with interrputs
@@ -29,7 +29,7 @@ void write_single_byte(int address, uint8_t data){
 //maybe one for currentread
 
 //this is random read, i.e you can access any legal memory loc you want
-uint8_t read_single_byte(int address){
+uint8_t read_single_byte(uint16_t address){
     uint8_t temp;
     //set up i2c bus with address so that we can receive
     _recv_EEPROM_adr(address);
@@ -43,7 +43,7 @@ uint8_t read_single_byte(int address){
 /*doesn't necessarily have to be 64 size array.
 take caution in making sure that you don't overwrite
 data when you do page unaligned writes */
-void write_page(int address, uint8_t* data){
+void write_page(uint16_t address, uint8_t data[4]){
     //set up i2c bus with address
     _write_EEPROM_adr(address);
     
@@ -55,7 +55,7 @@ void write_page(int address, uint8_t* data){
     i2c_stop();
 }
 //must be 64 bit size array
-void read_page(int address, uint8_t* temp){
+void read_page(uint16_t address, uint8_t* temp){
     //set up i2c bus with address so that we can receive
     _recv_EEPROM_adr(address);
 
@@ -70,7 +70,8 @@ void read_page(int address, uint8_t* temp){
     i2c_stop();
 }
 
-void _write_EEPROM_adr(int address){
+void _write_EEPROM_adr(uint16_t address){
+    PORTE = 0x01;
     do{
         i2c_start();
          //note, random reads require write byte
@@ -82,7 +83,7 @@ void _write_EEPROM_adr(int address){
     i2c_recv_ack();
 }
 
-void _recv_EEPROM_adr(int address){
+void _recv_EEPROM_adr(uint16_t address){
     _write_EEPROM_adr(address);
     //generate start and terminate write operation.
     i2c_start();
