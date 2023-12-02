@@ -8,11 +8,6 @@
 
 #define HIGHSCORE_SIZE 10
 
-typedef struct {
-    char name[3];
-    uint8_t score;
-} highscore_t;
-
 void save_highscore(char *name, uint8_t score);
 void load_highscore(highscore_t *highscores);
 
