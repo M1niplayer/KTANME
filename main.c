@@ -87,7 +87,9 @@ int setup(void){
 
   TRISE = 0;
 
-  uint8_t recieveBuffer = I2C1RCV; //clear receive buffer
+  //clear
+  uint8_t recieveBuffer = I2C1RCV;
+  PORTE = 0;
 
   screen_init();
 
@@ -193,13 +195,21 @@ uint8_t virtual_button(uint8_t cx, uint8_t cy, uint8_t press, uint8_t btnX0, uin
   return 0;
 }
 
+uint8_t blink_led(uint8_t current, uint8_t selected){
+  uint8_t tempLed;
+  uint8_t selectedTempLed;
+  tempLed = current & (0xff & ~selected); //set selected leds to 0
+  selectedTempLed = ~current & selected; //invert selected leds in separate variable
+  current = tempLed | selectedTempLed; //OR result together
+  return current;
+}
+
 int main(void)
 {
   // microcontroller setup for timers, interupts, i/o, i2c, spi, etc
   setup();
 
   int screen[128];
-
   uint8_t input[8];
 
   //cursor coordinates
@@ -213,7 +223,6 @@ int main(void)
   //menu logic
   //should show previous scores, difficulty settings, blabla
   set_background_pattern(0, screen);
-
   present_screen(screen);
   while(1) {
     uint8_t counter = 0;
@@ -264,31 +273,24 @@ int main(void)
       present_screen(screen);
     }
 
+    //gameSetup
     uint16_t time = 900 - (difficulty*300);
     counter = 0;
-
     uint8_t selectedBits = 0xff;
     uint8_t bitPointer = 0;
-    uint8_t PORTE8 = 0xff;
+    uint8_t PORTE8 = 0;
 
-    uint8_t tempLed = 0xff; //initial values
-    uint8_t selectedTempLed = 0xff;
     uint8_t solvedLed = 0b01001001;
-    PORTE = 0;
-    uint8_t lightsLed = PORTE; // sätt på alla ljus 1111 1111
-    // skicka också ligihtsled till skärmen
-
-    uint8_t currentModule = LIGHTS_OUT;
-
     uint8_t game = 1;
-
+    
+    PORTE = 0;
     while (game) {
       //timer
       if ((IFS(0) & 0b100000000) == 0) {continue;}
       IFSCLR(0) = 0b100000000;
 
       //win condition, solve all modules
-      if (PORTE == solvedLed) {
+      if (PORTE8 == solvedLed) {
         game = 0;
         continue;
       }
@@ -318,7 +320,6 @@ int main(void)
 
       //show what the bitpointer is at
       //throw in a help function so that my eyes don't hurt
-      PORTE8 = PORTE & 0xff;
       //draw whatever. 
       draw_digit(85, 3, bitPointer, screen);
       draw_digit(82, 3, bitPointer /10, screen);
@@ -333,18 +334,16 @@ int main(void)
         counter = 0;
       }
       draw_sprite(cx, cy, cursor, screen);
+
+      //logic for lightsgame code
+      uint8_t flashingBit = 1 << bitPointer; 
+      if (counter==50 || counter == 0) PORTE = blink_led(PORTE, flashingBit);
       present_screen(screen);
 
       //lightsgame code
       if (counter%30 == 0 && btnPressed() != 0) //add gamemode toggle
       {
         //draw dummy leds
-        uint8_t i = 0;
-        for (i = 0; i < 8; i++){
-          draw_sprite(2+(i*9), 2, led, screen);
-        }
-        draw_sprite(2+(bitPointer*9), 2, ledPointer, screen);
-
         //pointer logic. 
         if (btnPressed() == 4 && bitPointer >= 7) ; //skip, too far to the left
         else if(btnPressed() == 1 && bitPointer == 0) ; //skip, too far to the right
@@ -363,13 +362,11 @@ int main(void)
         //draw where your points is on the screen.
         // e.g if selected bits is 00111000 then tempLed would be VV000VVVV
         // where V is the current value of lightled
-        if (btnPressed() == 3){
-          tempLed = lightsLed & (0xff & ~selectedBits);
-          selectedTempLed = ~lightsLed & selectedBits;
-          lightsLed = tempLed | selectedTempLed;
-
-          PORTE = lightsLed;
+        if (btnPressed() == 3) {
+          PORTE  = blink_led(PORTE8, selectedBits);
+          PORTE8 = blink_led(PORTE8, selectedBits);
         }
+
       }
     }
 
