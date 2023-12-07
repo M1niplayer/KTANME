@@ -12,9 +12,9 @@ PROGNAME	= outfile
 LINKSCRIPT	:= p$(shell echo "$(DEVICE)" | tr '[:upper:]' '[:lower:]').ld
 
 # Compiler and linker flags
-CFLAGS		+= -ffreestanding -march=mips32r2 -msoft-float -Wa,-msoft-float
+CFLAGS		+= -lc -ffreestanding -march=mips32r2 -msoft-float -Wa,-msoft-float
 ASFLAGS		+= -msoft-float
-LDFLAGS		+= -T $(LINKSCRIPT)
+LDFLAGS		+= -lc -T $(LINKSCRIPT)
 
 # Filenames
 ELFFILE		= $(PROGNAME).elf

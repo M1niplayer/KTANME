@@ -1,12 +1,16 @@
 #include <pic32mx.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 #include "sprites.h"
 
 #include "i2c.h"
 #include "eeprom.h"
 #include "highscore.h"
-//#include "oled.h"
+#include "oled.h"
+
+//möjligen kasta in i en const.h fil
+uint8_t lightsOutSymbols[3] = {28, 49, 60};
 
 enum modules{
   LIGHTS_OUT,
@@ -21,6 +25,8 @@ enum difficulty{
   MEDIUM,
   HARD,
 };
+
+void *stdout = (void *) 0; //fixes stdout reference lmao
 
 void interrupt(void)
 {
@@ -204,11 +210,58 @@ uint8_t blink_led(uint8_t current, uint8_t selected){
   return current;
 }
 
+uint8_t calulate_solution(uint8_t symbol1, uint8_t symbol2){
+  uint8_t solution = lightsOutSymbols[symbol1%3] + lightsOutSymbols[symbol2%3];
+    switch(solution){
+      case 56:
+        return 0b00001001;
+      case 77:
+        return 0b01001000;
+      case 88:
+        return 0b00011000;
+      case 98:
+        return 0b10011001;
+      case 109:
+        return 0b00000100;
+      case 120:
+        return 0b00100100;
+      default:
+        return 0b00011000; //case 88
+    }
+}
+
+void selectSymbol(int* symbolPic, uint8_t symbol){
+  switch(symbol){
+    case 0:
+      symbolPic = square;
+      break;
+    case 1:
+      symbolPic = grejs;
+      break;
+    case 2:
+      symbolPic = stjarna;
+      break;
+    case 3:
+      symbolPic = square2;
+      break;
+    case 4:
+      symbolPic = grejs2;
+      break;
+    case 5:
+      symbolPic = stjarna2;
+      break;
+    default:
+      symbolPic = square;
+      break;
+  }
+}
+
 int main(void)
 {
   // microcontroller setup for timers, interupts, i/o, i2c, spi, etc
   setup();
-
+  //pseudorandomness
+  uint8_t seed = 0;
   int screen[128];
   uint8_t input[8];
 
@@ -218,19 +271,23 @@ int main(void)
 
   //intro sequence / startup goes here
   //A GAME BY Jimmy & Erik
-  //Keep the manual close at hand
+  //The manual is for the bomb defuser's eyes ONLY
 
   //menu logic
   //should show previous scores, difficulty settings, blabla
   set_background_pattern(0, screen);
   present_screen(screen);
+  //does not repeat
   while(1) {
+    PORTE = 0;
     uint8_t counter = 0;
     uint8_t difficulty = EASY;
 
     uint8_t inMenu = 1;
     while (inMenu) {
       //timer
+      
+      seed += 1;
       if ((IFS(0) & 0b100000000) == 0) {continue;}
       IFSCLR(0) = 0b100000000;
 
@@ -274,15 +331,26 @@ int main(void)
     }
 
     //gameSetup
+    srand(seed);
+    
     uint16_t time = 900 - (difficulty*300);
     counter = 0;
     uint8_t selectedBits = 0xff;
     uint8_t bitPointer = 0;
     uint8_t PORTE8 = 0;
 
-    uint8_t solvedLed = 0b01001001;
     uint8_t game = 1;
     
+    //solvedled logic
+    uint8_t symbol1 = rand()%6; //6 different symbols
+    uint8_t symbol2 = rand()%6;
+    
+    uint8_t solvedLed = calulate_solution(symbol1, symbol2);  
+    //int symbolPic1 [33];
+    //int symbolPic2 [33];
+    //selectSymbol(symbolPic1, symbol1);
+    //selectSymbol(symbolPic2, symbol2);
+
     PORTE = 0;
     while (game) {
       //timer
@@ -321,9 +389,12 @@ int main(void)
       //show what the bitpointer is at
       //throw in a help function so that my eyes don't hurt
       //draw whatever. 
-      draw_digit(85, 3, bitPointer, screen);
-      draw_digit(82, 3, bitPointer /10, screen);
-      draw_digit(79, 3, bitPointer /100, screen);
+      draw_digit(85, 3, symbol1, screen);
+      draw_digit(82, 3, symbol1 /10, screen);
+      draw_digit(79, 3, symbol1 /100, screen);
+      draw_digit(76, 3, symbol1 /1000, screen);
+      draw_digit(73, 3, symbol1 /10000, screen);
+      draw_digit(70, 3, symbol1 /100000, screen);
       
       //draw_digit(76, 3, selectedBits, screen);
 
@@ -334,16 +405,19 @@ int main(void)
         counter = 0;
       }
       draw_sprite(cx, cy, cursor, screen);
-
       //logic for lightsgame code
       uint8_t flashingBit = 1 << bitPointer; 
       if (counter==50 || counter == 0) PORTE = blink_led(PORTE, flashingBit);
-      present_screen(screen);
 
+      //draw symbols
+      //draw_sprite(83, 10, square, screen);
+      //draw_sprite(60, 10, symbolPic1, screen);
+      draw_digit(85, 10, symbol2, screen);
+      draw_digit(81, 10, symbol1, screen);
       //lightsgame code
       if (counter%30 == 0 && btnPressed() != 0) //add gamemode toggle
       {
-        //draw dummy leds
+
         //pointer logic. 
         if (btnPressed() == 4 && bitPointer >= 7) ; //skip, too far to the left
         else if(btnPressed() == 1 && bitPointer == 0) ; //skip, too far to the right
@@ -357,17 +431,15 @@ int main(void)
         if (bitPointer == 0){
           selectedBits = 0x3;
         }
-        //draw pos of pointer
-        //draw_sprite(10 + bitPointer * 14, 0, ledPointer, screen);
-        //draw where your points is on the screen.
+        
         // e.g if selected bits is 00111000 then tempLed would be VV000VVVV
         // where V is the current value of lightled
         if (btnPressed() == 3) {
           PORTE  = blink_led(PORTE8, selectedBits);
           PORTE8 = blink_led(PORTE8, selectedBits);
         }
-
       }
+      present_screen(screen);
     }
 
     //when finished, do highscore input.
