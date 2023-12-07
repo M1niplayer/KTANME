@@ -7,7 +7,7 @@
 #include "i2c.h"
 #include "eeprom.h"
 #include "highscore.h"
-//#include "oled.h"
+#include "oled.h"
 
 //möjligen kasta in i en const.h fil
 uint8_t lightsOutSymbols[3] = {28, 49, 60};
@@ -210,7 +210,7 @@ uint8_t blink_led(uint8_t current, uint8_t selected){
   return current;
 }
 
-uint8_t calulateSolution(uint8_t symbol1, uint8_t symbol2){
+uint8_t calulate_solution(uint8_t symbol1, uint8_t symbol2){
   uint8_t solution = lightsOutSymbols[symbol1%3] + lightsOutSymbols[symbol2%3];
     switch(solution){
       case 56:
@@ -233,25 +233,25 @@ uint8_t calulateSolution(uint8_t symbol1, uint8_t symbol2){
 void selectSymbol(int* symbolPic, uint8_t symbol){
   switch(symbol){
     case 0:
-      *symbolPic = square;
+      symbolPic = square;
       break;
     case 1:
-      *symbolPic = grejs;
+      symbolPic = grejs;
       break;
     case 2:
-      *symbolPic = stjarna;
+      symbolPic = stjarna;
       break;
     case 3:
-      *symbolPic = square2;
+      symbolPic = square2;
       break;
     case 4:
-      *symbolPic = grejs2;
+      symbolPic = grejs2;
       break;
     case 5:
-      *symbolPic = stjarna2;
+      symbolPic = stjarna2;
       break;
     default:
-      *symbolPic = square;
+      symbolPic = square;
       break;
   }
 }
@@ -279,7 +279,7 @@ int main(void)
   present_screen(screen);
   //does not repeat
   while(1) {
-
+    PORTE = 0;
     uint8_t counter = 0;
     uint8_t difficulty = EASY;
 
@@ -345,7 +345,11 @@ int main(void)
     uint8_t symbol1 = rand()%6; //6 different symbols
     uint8_t symbol2 = rand()%6;
     
-    uint8_t solvedLed = calculateSolution();    
+    uint8_t solvedLed = calulate_solution(symbol1, symbol2);  
+    //int symbolPic1 [33];
+    //int symbolPic2 [33];
+    //selectSymbol(symbolPic1, symbol1);
+    //selectSymbol(symbolPic2, symbol2);
 
     PORTE = 0;
     while (game) {
@@ -405,10 +409,14 @@ int main(void)
       uint8_t flashingBit = 1 << bitPointer; 
       if (counter==50 || counter == 0) PORTE = blink_led(PORTE, flashingBit);
 
+      //draw symbols
+      //draw_sprite(83, 10, square, screen);
+      //draw_sprite(60, 10, symbolPic1, screen);
+      draw_digit(85, 10, symbol2, screen);
+      draw_digit(81, 10, symbol1, screen);
       //lightsgame code
       if (counter%30 == 0 && btnPressed() != 0) //add gamemode toggle
       {
-        //draw symbols
 
         //pointer logic. 
         if (btnPressed() == 4 && bitPointer >= 7) ; //skip, too far to the left
