@@ -8,6 +8,8 @@
 #include "highscore.h"
 //#include "oled.h"
 
+#include "defs.h"
+
 enum modules{
   LIGHTS_OUT,
   TEMPERATURE,
@@ -183,11 +185,8 @@ explode(const int *screen) {
 }
 
 //check if cursor is pressing button, 2=press, 1=hover over, 0=not hovering at
-uint8_t virtual_button(uint8_t cx, uint8_t cy, uint8_t press, uint8_t btnX0, uint8_t btnY0, uint8_t btnX1, uint8_t btnY1) {
+uint8_t virtual_button(uint8_t cx, uint8_t cy, uint8_t btnX0, uint8_t btnY0, uint8_t btnX1, uint8_t btnY1) {
   if (cx >= btnX0 && cx <= btnX1 && cy >= btnY0 && cy <= btnY1) {
-    if (press) {
-      return 2;
-    }
     return 1;
   }
   return 0;
@@ -200,7 +199,7 @@ int main(void)
 
   int screen[128];
 
-  uint8_t input[8];
+  uint16_t input[8];
 
   //cursor coordinates
   uint8_t cx = 32;
@@ -211,10 +210,13 @@ int main(void)
   //Keep the manual close at hand
 
   //menu logic
-  //should show previous scores, difficulty settings, blabla
   set_background_pattern(0, screen);
 
   present_screen(screen);
+
+  uint8_t highscores[41];
+  load_highscore(highscores);
+
   while(1) {
     uint8_t counter = 0;
     uint8_t difficulty = EASY;
@@ -234,28 +236,62 @@ int main(void)
       get_input(input);
 
       uint8_t pointing = 0;
-      uint8_t press = (PORTD & (1 << 7));
+      uint8_t press = (input[BUTTON4]==1);
 
-      uint8_t buttonPress = virtual_button(cx, cy, press, 2, 7, 28, 13);
-      if (buttonPress) pointing = 1;
-      if (buttonPress == 2) {
-        difficulty = EASY;
-        inMenu = 0;
+      uint8_t buttonPress = virtual_button(cx, cy, 2, 7, 28, 13);
+      if (buttonPress) {
+        pointing = 1;
+        if (press) {
+          difficulty = EASY;
+          inMenu = 0;
+        }
       }
 
-      buttonPress = virtual_button(cx, cy, press, 2, 15, 28, 21);
-      if (buttonPress) pointing = 1;
-      if (buttonPress == 2) {
-        difficulty = MEDIUM;
-        inMenu = 0;
+      buttonPress = virtual_button(cx, cy, 2, 15, 28, 21);
+      if (buttonPress) {
+        pointing = 1;
+        if (press) {
+          difficulty = MEDIUM;
+          inMenu = 0;
+        }
       }
 
-      buttonPress = virtual_button(cx, cy, press, 2, 13, 28, 29);
-      if (buttonPress) pointing = 1;
-      if (buttonPress == 2) {
-        difficulty = HARD;
-        inMenu = 0;
+      buttonPress = virtual_button(cx, cy, 2, 13, 28, 29);
+      if (buttonPress) {
+        pointing = 1;
+        if (press) {
+          difficulty = HARD;
+          inMenu = 0;
+        }
       }
+
+      //show highscores
+      uint8_t i;
+      //first 4
+      for (i = 0; i<4; i++) {
+        if (highscores[0] < i) break;
+
+        uint16_t time = highscores[(i*5)+5] + highscores[(i*5)+4]<<8;
+
+        uint8_t seconds = time%60;
+        uint8_t minutes = time/60;
+        
+        draw_digit(37, 7+(i*6), i+1, screen);
+
+        //draw time
+        draw_digit(63, 7+(i*6), minutes/10, screen);
+        draw_digit(67, 7+(i*6), minutes%10, screen);
+        draw_digit(73, 7+(i*6), seconds/10, screen);
+        draw_digit(77, 7+(i*6), seconds%10, screen);
+
+        draw_letter(43, 7+(i*6), highscores[(i*5)+1], screen);
+        draw_letter(49, 7+(i*6), highscores[(i*5)+2], screen);
+        draw_letter(55, 7+(i*6), highscores[(i*5)+3], screen);
+      }
+      //last 4
+      // for (i = 0; i<4; i++) {
+      //   if (highscores[0] < i+4) break;
+      // }
 
       cursor_movement(&cx, &cy, input);
       set_background(screen, menu);
@@ -263,6 +299,8 @@ int main(void)
       else draw_sprite(cx, cy, cursor, screen);
       present_screen(screen);
     }
+
+    uint8_t win = 1;
 
     uint16_t time = 900 - (difficulty*300);
     counter = 0;
@@ -288,8 +326,111 @@ int main(void)
       IFSCLR(0) = 0b100000000;
 
       //win condition, solve all modules
-      if (PORTE == solvedLed) {
+      if (win) {
         game = 0;
+
+        //win sequence
+        //win screen, score, then input name
+        uint8_t name[3];
+        name[0] = 255;
+        name[1] = 255;
+        name[2] = 255;
+        uint8_t nameInput = 1;
+        while(nameInput) {
+          //timer
+          if ((IFS(0) & 0b100000000) == 0) {continue;}
+          IFSCLR(0) = 0b100000000;
+
+          uint8_t pointing = 0;
+          uint8_t press = (input[BUTTON4]==1);
+          uint8_t backPress = (input[BUTTON3]==1);
+          get_input(input);
+          cursor_movement(&cx, &cy, input);
+          uint8_t selectedLetter = 255;
+          uint8_t i;
+
+          //first row of letters
+          for (i = 0; i<13; i++) {
+            uint8_t lx = 2 + (9*i);
+            if (virtual_button(cx, cy, lx, 12, lx+6, 18)) {
+              pointing = 1;
+              if (press) {
+                selectedLetter = i;
+              }
+            }
+          }
+
+          //second row
+          for (i = 0; i<13; i++) {
+            uint8_t lx = 2 + (9*i);
+            if (virtual_button(cx, cy, lx, 21, lx+6, 27)) {
+              pointing = 1;
+              if (press) {
+                selectedLetter = i+13;
+              }
+            }
+          }
+
+          if (virtual_button(cx, cy, 119, 12, 124, 18)) {
+            pointing = 1;
+            if (press) {
+              selectedLetter = 254;
+            }
+          }
+
+          if (virtual_button(cx, cy, 96, 3, 120, 9)) {
+            pointing = 1;
+            if (press) {
+              selectedLetter = 253;
+            }
+          }
+
+          if ((selectedLetter == 254) || backPress) {
+            uint8_t c;
+            for (c = 0; c<3; c++) {
+              if (name[2-c] != 255) {
+                name[2-c] = 255;
+                break;
+              }
+            }
+          } else if (selectedLetter == 253) {
+            if (name[2] != 255) {
+              nameInput = 0;
+              
+              uint16_t score = time;
+              if (difficulty == EASY) score /= 3;
+              else if (difficulty == MEDIUM) score /= 2;
+              if (score > 899) score = 899;
+              save_highscore(name[0], name[1], name[2], score);
+              continue;
+            }
+          } else if (selectedLetter != 255) {
+            uint8_t c;
+            for (c = 0; c<3; c++) {
+              if (name[c] == 255) {
+                name[c] = selectedLetter;
+                break;
+              }
+            }
+          }
+
+          set_background(screen, keyboard);
+
+          if (name[0] != 255) {
+            draw_letter(60, 2, name[0], screen);
+          }
+          if (name[1] != 255) {
+            draw_letter(66, 2, name[1], screen);
+          }
+          if (name[2] != 255) {
+            draw_letter(72, 2, name[2], screen);
+          }
+
+          if (pointing) draw_sprite(cx, cy, cursor_pointing, screen);
+          else draw_sprite(cx, cy, cursor, screen);
+          present_screen(screen);
+        }
+
         continue;
       }
 
@@ -336,41 +477,41 @@ int main(void)
       present_screen(screen);
 
       //lightsgame code
-      if (counter%30 == 0 && btnPressed() != 0) //add gamemode toggle
-      {
-        //draw dummy leds
-        uint8_t i = 0;
-        for (i = 0; i < 8; i++){
-          draw_sprite(2+(i*9), 2, led, screen);
-        }
-        draw_sprite(2+(bitPointer*9), 2, ledPointer, screen);
+      // if ((counter%30 == 0) && (btnPressed() != 0)) //add gamemode toggle
+      // {
+      //   //draw dummy leds
+      //   uint8_t i = 0;
+      //   for (i = 0; i < 8; i++){
+      //     draw_sprite(2+(i*9), 2, led, screen);
+      //   }
+      //   draw_sprite(2+(bitPointer*9), 2, ledPointer, screen);
 
-        //pointer logic. 
-        if (btnPressed() == 4 && bitPointer >= 7) ; //skip, too far to the left
-        else if(btnPressed() == 1 && bitPointer == 0) ; //skip, too far to the right
-        else{
-          if (btnPressed() == 4) bitPointer += 1;
-          if (btnPressed() == 1) bitPointer -= 1;
-        }
+      //   //pointer logic. 
+      //   if (btnPressed() == 4 && bitPointer >= 7) ; //skip, too far to the left
+      //   else if(btnPressed() == 1 && bitPointer == 0) ; //skip, too far to the right
+      //   else{
+      //     if (btnPressed() == 4) bitPointer += 1;
+      //     if (btnPressed() == 1) bitPointer -= 1;
+      //   }
         
-        //selected bits logic
-        selectedBits = 0xff & (7 << bitPointer - 1);
-        if (bitPointer == 0){
-          selectedBits = 0x3;
-        }
-        //draw pos of pointer
-        //draw_sprite(10 + bitPointer * 14, 0, ledPointer, screen);
-        //draw where your points is on the screen.
-        // e.g if selected bits is 00111000 then tempLed would be VV000VVVV
-        // where V is the current value of lightled
-        if (btnPressed() == 3){
-          tempLed = lightsLed & (0xff & ~selectedBits);
-          selectedTempLed = ~lightsLed & selectedBits;
-          lightsLed = tempLed | selectedTempLed;
+      //   //selected bits logic
+      //   selectedBits = 0xff & (7 << bitPointer - 1);
+      //   if (bitPointer == 0){
+      //     selectedBits = 0x3;
+      //   }
+      //   //draw pos of pointer
+      //   //draw_sprite(10 + bitPointer * 14, 0, ledPointer, screen);
+      //   //draw where your points is on the screen.
+      //   // e.g if selected bits is 00111000 then tempLed would be VV000VVVV
+      //   // where V is the current value of lightled
+      //   if (btnPressed() == 3){
+      //     tempLed = lightsLed & (0xff & ~selectedBits);
+      //     selectedTempLed = ~lightsLed & selectedBits;
+      //     lightsLed = tempLed | selectedTempLed;
 
-          PORTE = lightsLed;
-        }
-      }
+      //     PORTE = lightsLed;
+      //   }
+      // }
     }
 
     //when finished, do highscore input.

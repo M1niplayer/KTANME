@@ -71,7 +71,6 @@ void read_page(uint16_t address, uint8_t* temp){
 }
 
 void _write_EEPROM_adr(uint16_t address){
-    PORTE = 0x01;
     do{
         i2c_start();
          //note, random reads require write byte
