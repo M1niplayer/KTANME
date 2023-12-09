@@ -269,7 +269,7 @@ int main(void)
       uint8_t i;
       //first 4
       for (i = 0; i<4; i++) {
-        if (highscores[0] < i) break;
+        if (highscores[0] <i+1) break;
 
         uint16_t time = highscores[(i*5)+5] + highscores[(i*5)+4]<<8;
 

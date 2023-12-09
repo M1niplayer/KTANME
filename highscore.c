@@ -1,7 +1,7 @@
 #include "highscore.h"
 
 void save_highscore(uint8_t char0, uint8_t char1, uint8_t char2, uint8_t score){
-
+    PORTE =0;
     //optimized to reduce amount of page writes
     //check how many scores there are
     uint8_t bitpackedByte0 = 0;
@@ -13,6 +13,7 @@ void save_highscore(uint8_t char0, uint8_t char1, uint8_t char2, uint8_t score){
     uint8_t ctScores = read_single_byte(0x003f);
 
     uint8_t scoreList[64]; 
+    PORTE|=1;
     if (ctScores == 0) {
         //save at first place at score list and increment score count
         //bit packing fun time
@@ -34,6 +35,7 @@ void save_highscore(uint8_t char0, uint8_t char1, uint8_t char2, uint8_t score){
         bitpackedByte1 = read_single_byte(i*3 + 1);
         bitpackedByte2 = read_single_byte(i*3 + 2);
         _unpack_score(&dummyName[0], &dummyName[1], &dummyName[2], &tempScore, bitpackedByte0, bitpackedByte1, bitpackedByte2);
+        PORTE|=8;
         if (score > tempScore){
             //shift all scores down by one
             int j = 0;
@@ -49,6 +51,7 @@ void save_highscore(uint8_t char0, uint8_t char1, uint8_t char2, uint8_t score){
             scoreList[i*3 + 2] = bitpackedByte2;
             scoreList[63] += 1;
             write_page(0x0000, scoreList);
+            PORTE|=16;
             return;
         }
     }

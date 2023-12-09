@@ -43,15 +43,16 @@ uint8_t read_single_byte(uint16_t address){
 /*doesn't necessarily have to be 64 size array.
 take caution in making sure that you don't overwrite
 data when you do page unaligned writes */
-void write_page(uint16_t address, uint8_t data[4]){
+void write_page(uint16_t address, uint8_t data[64]){
     //set up i2c bus with address
     _write_EEPROM_adr(address);
-    
+    PORTE|=2;
     int i = 0;
     for (i = 0; i < 64; i++){
         i2c_send(data[i]);
         i2c_recv_ack();
     }
+    PORTE|=4;
     i2c_stop();
 }
 //must be 64 bit size array
