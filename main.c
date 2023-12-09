@@ -8,6 +8,7 @@
 #include "eeprom.h"
 #include "highscore.h"
 #include "oled.h"
+#include "temp.h"
 
 //möjligen kasta in i en const.h fil
 uint8_t lightsOutSymbols[3] = {28, 49, 60};
@@ -92,10 +93,11 @@ int setup(void){
   T2CONSET = 0x8000; //start timer
 
   TRISE = 0;
-
   //clear
   uint8_t recieveBuffer = I2C1RCV;
   PORTE = 0;
+
+  //temperature config
 
   screen_init();
 
@@ -269,6 +271,9 @@ int main(void)
   uint8_t cx = 32;
   uint8_t cy = 16;
 
+  set_temp_config(0b00100000);   
+  set_temp_limits(-30, 60);
+
   //intro sequence / startup goes here
   //A GAME BY Jimmy & Erik
   //The manual is for the bomb defuser's eyes ONLY
@@ -329,7 +334,7 @@ int main(void)
       else draw_sprite(cx, cy, cursor, screen);
       present_screen(screen);
     }
-
+    PORTE = 0;
     //gameSetup
     srand(seed);
     
@@ -338,7 +343,7 @@ int main(void)
     uint8_t selectedBits = 0xff;
     uint8_t bitPointer = 0;
     uint8_t PORTE8 = 0;
-
+    uint8_t temperature = 0;
     uint8_t game = 1;
     
     //solvedled logic
@@ -346,12 +351,12 @@ int main(void)
     uint8_t symbol2 = rand()%6;
     
     uint8_t solvedLed = calulate_solution(symbol1, symbol2);  
+     
     //int symbolPic1 [33];
     //int symbolPic2 [33];
     //selectSymbol(symbolPic1, symbol1);
-    //selectSymbol(symbolPic2, symbol2);
+    //selectSymbol(symbolPic2, symbol2); 
 
-    PORTE = 0;
     while (game) {
       //timer
       if ((IFS(0) & 0b100000000) == 0) {continue;}
@@ -396,48 +401,20 @@ int main(void)
       draw_digit(73, 3, symbol1 /10000, screen);
       draw_digit(70, 3, symbol1 /100000, screen);
       
-      //draw_digit(76, 3, selectedBits, screen);
-
       counter++;
-      if (counter > 59)
+      if (counter > 259)
       {
         time -= 1;
         counter = 0;
+        PORTE|= 128;
       }
-      draw_sprite(cx, cy, cursor, screen);
-      //logic for lightsgame code
-      uint8_t flashingBit = 1 << bitPointer; 
-      if (counter==50 || counter == 0) PORTE = blink_led(PORTE, flashingBit);
-
-      //draw symbols
-      //draw_sprite(83, 10, square, screen);
-      //draw_sprite(60, 10, symbolPic1, screen);
-      draw_digit(85, 10, symbol2, screen);
-      draw_digit(81, 10, symbol1, screen);
-      //lightsgame code
-      if (counter%30 == 0 && btnPressed() != 0) //add gamemode toggle
-      {
-
-        //pointer logic. 
-        if (btnPressed() == 4 && bitPointer >= 7) ; //skip, too far to the left
-        else if(btnPressed() == 1 && bitPointer == 0) ; //skip, too far to the right
-        else{
-          if (btnPressed() == 4) bitPointer += 1;
-          if (btnPressed() == 1) bitPointer -= 1;
-        }
-        
-        //selected bits logic
-        selectedBits = 0xff & (7 << bitPointer - 1);
-        if (bitPointer == 0){
-          selectedBits = 0x3;
-        }
-        
-        // e.g if selected bits is 00111000 then tempLed would be VV000VVVV
-        // where V is the current value of lightled
-        if (btnPressed() == 3) {
-          PORTE  = blink_led(PORTE8, selectedBits);
-          PORTE8 = blink_led(PORTE8, selectedBits);
-        }
+      
+      //temperature Module
+      if(counter%1500 == 0){
+        temperature = read_temp();
+        draw_digit(76, 3, temperature, screen);
+        draw_digit(73, 3, temperature /10, screen);
+        draw_digit(70, 3, temperature /100, screen);
       }
       present_screen(screen);
     }
