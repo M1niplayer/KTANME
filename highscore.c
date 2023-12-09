@@ -8,7 +8,6 @@ void save_highscore(uint8_t char0, uint8_t char1, uint8_t char2, uint8_t score){
     uint8_t bitpackedByte2 = 0;
     _pack_score(char0, char1, char2, score, &bitpackedByte0, &bitpackedByte1, &bitpackedByte2);
 
-
     uint8_t ctScores = read_single_byte(0x003f);
 
     uint8_t scoreList[64]; 
@@ -30,22 +29,22 @@ void save_highscore(uint8_t char0, uint8_t char1, uint8_t char2, uint8_t score){
     read_page(0x0000, scoreList);
 
     int i = 0;
+    int k = 0;
     uint16_t tempScore = 0;
     uint8_t* dummyName;
-    for (i = 0; i < ctScores; i++){
+    for (i = 0; i < 8; i++){
         if (i == 10) return; //only 10 scores allowed
         bitpackedByte0 = read_single_byte(i*3);
         bitpackedByte1 = read_single_byte(i*3 + 1);
         bitpackedByte2 = read_single_byte(i*3 + 2);
         _unpack_score(&dummyName[0], &dummyName[1], &dummyName[2], &tempScore, bitpackedByte0, bitpackedByte1, bitpackedByte2);
-    
+        
         if (score > tempScore){
             //shift all scores down by one
-            int j = 0;
-            for (j = ctScores; j > i; j--){
-                scoreList[j*3] = scoreList[(j-1)*3];
-                scoreList[j*3 + 1] = scoreList[(j-1)*3 + 1];
-                scoreList[j*3 + 2] = scoreList[(j-1)*3 + 2];
+            for (k = ctScores +1; k > i; k--){
+                scoreList[k*3] = scoreList[(k-1)*3];
+                scoreList[k*3 + 1] = scoreList[(k-1)*3 + 1];
+                scoreList[k*3 + 2] = scoreList[(k-1)*3 + 2];
             }
             //insert new score
             _pack_score(char0, char1, char2, score, &bitpackedByte0, &bitpackedByte1, &bitpackedByte2);
