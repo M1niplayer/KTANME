@@ -271,7 +271,8 @@ int main(void)
   uint8_t cx = 32;
   uint8_t cy = 16;
 
-  set_temp_config(0b00100000);   
+
+  set_temp_config(0b00100000); //0.25c resolution
   set_temp_limits(-30, 60);
 
   //intro sequence / startup goes here
@@ -356,7 +357,6 @@ int main(void)
     //int symbolPic2 [33];
     //selectSymbol(symbolPic1, symbol1);
     //selectSymbol(symbolPic2, symbol2); 
-
     while (game) {
       //timer
       if ((IFS(0) & 0b100000000) == 0) {continue;}
@@ -394,28 +394,23 @@ int main(void)
       //show what the bitpointer is at
       //throw in a help function so that my eyes don't hurt
       //draw whatever. 
-      draw_digit(85, 3, symbol1, screen);
-      draw_digit(82, 3, symbol1 /10, screen);
-      draw_digit(79, 3, symbol1 /100, screen);
-      draw_digit(76, 3, symbol1 /1000, screen);
-      draw_digit(73, 3, symbol1 /10000, screen);
-      draw_digit(70, 3, symbol1 /100000, screen);
       
       counter++;
-      if (counter > 259)
+      if (counter > 59)
       {
         time -= 1;
         counter = 0;
-        PORTE|= 128;
       }
-      
+      draw_sprite(cx, cy, cursor, screen);
+
       //temperature Module
-      if(counter%1500 == 0){
-        temperature = read_temp();
-        draw_digit(76, 3, temperature, screen);
-        draw_digit(73, 3, temperature /10, screen);
-        draw_digit(70, 3, temperature /100, screen);
-      }
+      //if(counter%60 == 0){
+      //  
+      temperature = read_temp();
+      draw_digit(76, 3, temperature, screen);
+      draw_digit(73, 3, temperature /10, screen);
+      draw_digit(70, 3, temperature /100, screen);
+      //}
       present_screen(screen);
     }
 
