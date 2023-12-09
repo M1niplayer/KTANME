@@ -348,9 +348,14 @@ int main(void)
     //temp module
     uint8_t temperature = 0;
     //0, 25, 50, 100
-    uint8_t tempDecimals=0; 
+    uint8_t tempDecimals = 0; 
+    bool tempHot = false;
     
     uint8_t game = 1;
+
+    uint8_t wire[6] = {0, 0, 0, 0, 0, 0};
+    uint8_t solvedWires[6] = {1, 2, 0, 0, 1, 2};
+    uint8_t wirePosition = 0;
     
     //solvedled logic
     uint8_t symbol1 = rand()%6; //6 different symbols
@@ -408,6 +413,7 @@ int main(void)
       }
       draw_sprite(cx, cy, cursor, screen);
 
+
       temperature = read_temp();
       //since we don't change tempconfig, hardcode solution
       tempDecimals = (temperature & 0x3) * 25; 
@@ -415,9 +421,28 @@ int main(void)
       draw_digit(72, 3, tempDecimals/10, screen);
       //draw comma
       temperature = temperature >> 1;
-      draw_digit(69, 3, temperature, screen);
-      draw_digit(65, 3, temperature/10, screen);
+      draw_digit(69, 3, temperature >> 1, screen);
+      draw_digit(65, 3, (temperature >> 1)/10, screen);
 
+
+      
+
+      if (temperature > 28) {
+        tempHot = true;
+      }
+
+      if (tempHot || input[2] == 1) {
+        //check if valid position : return what position
+        //check if not existing 
+        if(tempHot){wire[wirePosition] = 1;} //solder
+        else if(input[2] == 1){wire[wirePosition] = 2;} //cut
+        
+
+      }
+
+      if () {
+        //cut wire
+      }
       present_screen(screen);
     }
 
