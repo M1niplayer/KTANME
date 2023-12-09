@@ -342,9 +342,14 @@ int main(void)
     uint16_t time = 900 - (difficulty*300);
     counter = 0;
     uint8_t selectedBits = 0xff;
+    //lights game
     uint8_t bitPointer = 0;
     uint8_t PORTE8 = 0;
+    //temp module
     uint8_t temperature = 0;
+    //0, 25, 50, 100
+    uint8_t tempDecimals=0; 
+    
     uint8_t game = 1;
     
     //solvedled logic
@@ -403,14 +408,16 @@ int main(void)
       }
       draw_sprite(cx, cy, cursor, screen);
 
-      //temperature Module
-      //if(counter%60 == 0){
-      //  
       temperature = read_temp();
-      draw_digit(76, 3, temperature, screen);
-      draw_digit(73, 3, temperature /10, screen);
-      draw_digit(70, 3, temperature /100, screen);
-      //}
+      //since we don't change tempconfig, hardcode solution
+      tempDecimals = (temperature & 0x3) * 25; 
+      draw_digit(76, 3, tempDecimals, screen);
+      draw_digit(72, 3, tempDecimals/10, screen);
+      //draw comma
+      temperature = temperature >> 1;
+      draw_digit(69, 3, temperature, screen);
+      draw_digit(65, 3, temperature/10, screen);
+
       present_screen(screen);
     }
 

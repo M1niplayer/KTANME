@@ -19,9 +19,9 @@ int read_temp(){
     i2c_stop();
 
     
-    uint8_t config _read_temp_config();
+    uint8_t config = _read_temp_config();
     config = (config >> 5) & 0x3; //get resolution bits
-    temp = temp >> (7 - config)
+    temp = temp >> (7 - config);
     return temp;
 }
 /* Set_config
