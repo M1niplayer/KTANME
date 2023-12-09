@@ -4,12 +4,12 @@ int read_temp(){
     int temp = 0;
     do { //write register pointer
         i2c_start();
-    } while(i2c_send(TEMP_CLIENT_ADDR << 1));
+    } while(!i2c_send(TEMP_CLIENT_ADDR << 1));
     i2c_send(TEMP_REG_TEMP); 
 
     do { //read temperature
         i2c_start();
-    } while(i2c_send(TEMP_CLIENT_ADDR << 1) | 1);
+    } while(!i2c_send(TEMP_CLIENT_ADDR << 1) | 1);
 
     temp = i2c_recv() << 8; 
     i2c_set_ack();
@@ -33,23 +33,25 @@ Bit 1 is COMP/INT (comparator, interrupt) mode. 0 is comparator.
 Bit 0 is Shutdown. 0 is no shutdown
 
 just send 00100000 lmao*/
-void set_config(uint8_t config){
+void set_temp_config(uint8_t config){
     do { //write register pointer
         i2c_start();
-    } while(i2c_send(TEMP_CLIENT_ADDR << 1));
+    } while(!i2c_send(TEMP_CLIENT_ADDR << 1));
+    
     i2c_send(TEMP_REG_CONFIG); 
     i2c_recv_ack();
     
     i2c_send(config);
     i2c_recv_ack();
+    
     i2c_stop();
 }
 
 /* In celsius. Each register is 9 bits signed size. */
-void set_limits(int low, int high){
+void set_temp_limits(int low, int high){
     do { //write register pointer
         i2c_start();
-    } while(i2c_send(TEMP_CLIENT_ADDR << 1));
+    } while(!i2c_send(TEMP_CLIENT_ADDR << 1));
     i2c_send(TEMP_REG_THYST); 
     i2c_recv_ack();
     i2c_send(low);
@@ -58,7 +60,7 @@ void set_limits(int low, int high){
 
     do { //write register pointer
         i2c_start();
-    } while(i2c_send(TEMP_CLIENT_ADDR << 1));
+    } while(!i2c_send(TEMP_CLIENT_ADDR << 1));
     i2c_send(TEMP_REG_TSET);
     i2c_recv_ack();
     i2c_send(high);
