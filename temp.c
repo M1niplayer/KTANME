@@ -1,21 +1,27 @@
 #include "temp.h"
 
+/*Note, the temperature returned is 2^4 too big. This is because the last
+4 values are reserved for decimal values.*/
 int read_temp(){
     int temp = 0;
     do { //write register pointer
         i2c_start();
     } while(!i2c_send(TEMP_CLIENT_ADDR << 1));
     i2c_send(TEMP_REG_TEMP); 
-
+    i2c_recv_ack();
     do { //read temperature
         i2c_start();
-    } while(!i2c_send(TEMP_CLIENT_ADDR << 1) | 1);
-
+    } while(!i2c_send(TEMP_CLIENT_ADDR << 1 | 1)); 
     temp = i2c_recv() << 8; 
     i2c_set_ack();
     temp = temp | i2c_recv(); //LSB. Can include useless info. 
     i2c_set_nack();
     i2c_stop();
+
+    
+    uint8_t config _read_temp_config();
+    config = (config >> 5) & 0x3; //get resolution bits
+    temp = temp >> (7 - config)
     return temp;
 }
 /* Set_config
@@ -47,6 +53,21 @@ void set_temp_config(uint8_t config){
     i2c_stop();
 }
 
+uint8_t _read_temp_config(){
+    uint8_t config = 0;
+    do { 
+        i2c_start();
+    } while(!i2c_send(TEMP_CLIENT_ADDR << 1));
+    i2c_send(TEMP_REG_CONFIG); 
+    i2c_recv_ack();
+    do { 
+        i2c_start();
+    } while(!i2c_send(TEMP_CLIENT_ADDR << 1|1));
+    config = i2c_recv();
+    i2c_set_nack();
+    i2c_stop();
+}
+
 /* In celsius. Each register is 9 bits signed size. */
 void set_temp_limits(int low, int high){
     do { //write register pointer
@@ -54,8 +75,9 @@ void set_temp_limits(int low, int high){
     } while(!i2c_send(TEMP_CLIENT_ADDR << 1));
     i2c_send(TEMP_REG_THYST); 
     i2c_recv_ack();
-    i2c_send(low);
+    i2c_send(low&0xff);
     i2c_recv_ack();
+    i2c_send(0x0);
     i2c_stop();
 
     do { //write register pointer
@@ -63,7 +85,8 @@ void set_temp_limits(int low, int high){
     } while(!i2c_send(TEMP_CLIENT_ADDR << 1));
     i2c_send(TEMP_REG_TSET);
     i2c_recv_ack();
-    i2c_send(high);
+    i2c_send(high&0xff);
+    i2c_send(0x0); 
     i2c_recv_ack();
     i2c_stop();
 }
