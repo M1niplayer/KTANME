@@ -1,6 +1,6 @@
 #include <pic32mx.h>
 #include <stdint.h>
-
+#include <string.h>
 #include "sprites.h"
 
 #include "i2c.h"
@@ -194,13 +194,15 @@ uint8_t virtual_button(uint8_t cx, uint8_t cy, uint8_t btnX0, uint8_t btnY0, uin
 
 int main(void)
 {
+  
   // microcontroller setup for timers, interupts, i/o, i2c, spi, etc
   setup();
-
   int screen[128];
 
   uint16_t input[8];
-
+  
+  //write_page(0x0000, empty);
+  
   //cursor coordinates
   uint8_t cx = 32;
   uint8_t cy = 16;
@@ -215,9 +217,12 @@ int main(void)
   present_screen(screen);
 
   uint8_t highscores[41];
-  load_highscore(highscores);
+
+  //write_page(0x0000, empty);
 
   while(1) {
+    PORTE++;
+    load_highscore(highscores);
     uint8_t counter = 0;
     uint8_t difficulty = EASY;
 
@@ -265,11 +270,13 @@ int main(void)
         }
       }
 
+      set_background(screen, menu);
       //show highscores
       uint8_t i;
-      //first 4
+      //first 
+
       for (i = 0; i<4; i++) {
-        if (highscores[0] <i+1) break;
+        //if (highscores[0] <i+1) break;
 
         uint16_t time = highscores[(i*5)+5] + highscores[(i*5)+4]<<8;
 
@@ -283,18 +290,44 @@ int main(void)
         draw_digit(67, 7+(i*6), minutes%10, screen);
         draw_digit(73, 7+(i*6), seconds/10, screen);
         draw_digit(77, 7+(i*6), seconds%10, screen);
+        
 
         draw_letter(43, 7+(i*6), highscores[(i*5)+1], screen);
         draw_letter(49, 7+(i*6), highscores[(i*5)+2], screen);
         draw_letter(55, 7+(i*6), highscores[(i*5)+3], screen);
       }
       //last 4
-      // for (i = 0; i<4; i++) {
-      //   if (highscores[0] < i+4) break;
-      // }
+      for (i = 0; i<4; i++) {
+        //if (highscores[0] <i+5) break;
 
+        uint16_t time = highscores[((i+4)*5)+5] + highscores[((i+4)*5)+4]<<8;
+
+        uint8_t seconds = time%60;
+        uint8_t minutes = time/60;
+        
+        draw_digit(37+46, 7+(i*6), i+5, screen);
+
+        //draw time
+        draw_digit(63+46, 7+(i*6), minutes/10, screen);
+        draw_digit(67+46, 7+(i*6), minutes%10, screen);
+        draw_digit(73+46, 7+(i*6), seconds/10, screen);
+        draw_digit(77+46, 7+(i*6), seconds%10, screen);
+        
+
+        draw_letter(43+46, 7+(i*6), highscores[((i+4)*5)+1], screen);
+        draw_letter(49+46, 7+(i*6), highscores[((i+4)*5)+2], screen);
+        draw_letter(55+46, 7+(i*6), highscores[((i+4)*5)+3], screen);
+      }
+
+      draw_digit(29, 3, highscores[0], screen);
+      draw_digit(26, 3, highscores[0]/10, screen);
+
+      //draw_digit(90, 3, read_single_byte(0x0001), screen);
+      //draw_digit(87, 3, read_single_byte(0x0001)/10, screen);
+      //draw_digit(84, 3, read_single_byte(0x0002), screen);
+      //draw_digit(81, 3, read_single_byte(0x0002)/10, screen);
+      
       cursor_movement(&cx, &cy, input);
-      set_background(screen, menu);
       if (pointing) draw_sprite(cx, cy, cursor_pointing, screen);
       else draw_sprite(cx, cy, cursor, screen);
       present_screen(screen);
@@ -312,7 +345,6 @@ int main(void)
     uint8_t tempLed = 0xff; //initial values
     uint8_t selectedTempLed = 0xff;
     uint8_t solvedLed = 0b01001001;
-    PORTE = 0;
     uint8_t lightsLed = PORTE; // sätt på alla ljus 1111 1111
     // skicka också ligihtsled till skärmen
 
