@@ -196,6 +196,30 @@ explode(const int *screen) {
   delay(animation_wait);
 }
 
+//strike! animation
+strike_flash(const int *screen) {
+  int animation_wait = 500000;
+
+  fill_screen(0x55);
+  delay(animation_wait);
+
+  fill_screen(0xff);
+
+  delay(animation_wait*5);
+
+  fill_screen(0xee);
+
+  delay(animation_wait);
+
+  fill_screen(0x55);
+
+  delay(animation_wait);
+
+  fill_screen(0x11);
+
+  delay(animation_wait);
+}
+
 //check if cursor is pressing button, 2=press, 1=hover over, 0=not hovering at
 uint8_t virtual_button(uint8_t cx, uint8_t cy, uint8_t btnX0, uint8_t btnY0, uint8_t btnX1, uint8_t btnY1) {
   if (cx >= btnX0 && cx <= btnX1 && cy >= btnY0 && cy <= btnY1) {
@@ -400,7 +424,9 @@ int main(void)
     uint8_t symbol1 = rand()%6; //6 different symbols
     uint8_t symbol2 = rand()%6;
     
-    uint8_t solvedLed = calulate_solution(symbol1, symbol2);  
+    uint8_t solvedLed = calulate_solution(symbol1, symbol2);
+
+    uint8_t strikes = 0;
 
     while (game) {
       //timer
@@ -543,8 +569,12 @@ int main(void)
       draw_digit(116, 3, seconds/10, screen);
       draw_digit(120, 3, seconds%10, screen);
 
+      if (strikes>0) draw_sprite(102, 14, strike, screen);
+      if (strikes>1) draw_sprite(110, 14, strike, screen);
+      if (strikes>2) draw_sprite(118, 14, strike, screen);
+
       counter++;
-      if (counter > 59)
+      if (counter > 59-(strikes*15))
       {
         time -= 1;
         counter = 0;
@@ -620,7 +650,12 @@ int main(void)
       if (virtual_button(cx, cy, 3, 20, 27, 28)) {
         pointing = 1;
         if (press) {
-          //stuff happens
+          if (PORTE8 == solvedLed) {
+            //lights out solved
+          } else {
+            strikes++;
+            strike_flash(screen);
+          }
         }
       }
 
