@@ -73,7 +73,7 @@ int setup(void){
   SPI2CONSET = 0x8000;
 
   //BACK TO OUR OWN CODE
-  
+
   /* Set up i2c */
 	I2C1CON = 0x0;
 	/* uh, actually I don't know if the baud rate generator has to be less than 
@@ -266,7 +266,7 @@ int main(void)
         }
       }
 
-      buttonPress = virtual_button(cx, cy, 2, 13, 28, 29);
+      buttonPress = virtual_button(cx, cy, 2, 23, 28, 29);
       if (buttonPress) {
         pointing = 1;
         if (press) {
@@ -281,9 +281,9 @@ int main(void)
       //first 
 
       for (i = 0; i<4; i++) {
-        //if (highscores[0] <i+1) break;
+        if (highscores[0] <i+1) break;
 
-        uint16_t time = highscores[(i*5)+5] + highscores[(i*5)+4]<<8;
+        uint16_t time = highscores[(i*5)+5] + (highscores[(i*5)+4]<<8);
 
         uint8_t seconds = time%60;
         uint8_t minutes = time/60;
@@ -303,9 +303,9 @@ int main(void)
       }
       //last 4
       for (i = 0; i<4; i++) {
-        //if (highscores[0] <i+5) break;
+        if (highscores[0] <i+5) break;
 
-        uint16_t time = highscores[((i+4)*5)+5] + highscores[((i+4)*5)+4]<<8;
+        uint16_t time = highscores[((i+4)*5)+5] + (highscores[((i+4)*5)+4]<<8);
 
         uint8_t seconds = time%60;
         uint8_t minutes = time/60;
@@ -324,8 +324,8 @@ int main(void)
         draw_letter(55+46, 7+(i*6), highscores[((i+4)*5)+3], screen);
       }
 
-      draw_digit(29, 3, highscores[0], screen);
-      draw_digit(26, 3, highscores[0]/10, screen);
+      //draw_digit(29, 3, highscores[0], screen);
+      //draw_digit(26, 3, highscores[0]/10, screen);
 
       //draw_digit(90, 3, read_single_byte(0x0001), screen);
       //draw_digit(87, 3, read_single_byte(0x0001)/10, screen);
@@ -338,9 +338,9 @@ int main(void)
       present_screen(screen);
     }
 
-    uint8_t win = 1;
+    uint8_t win = 0;
 
-    uint16_t time = 900 - (difficulty*300);
+    uint16_t time = 900 - (((uint16_t) difficulty)*300);
     counter = 0;
 
     uint8_t selectedBits = 0xff;
@@ -436,7 +436,8 @@ int main(void)
               
               uint16_t score = time;
               if (difficulty == EASY) score /= 3;
-              else if (difficulty == MEDIUM) score /= 2;
+              //else if (difficulty == MEDIUM) score /= 2;
+              else if (difficulty == HARD) score *= 3;
               if (score > 899) score = 899;
               save_highscore(name[0], name[1], name[2], score);
               continue;
