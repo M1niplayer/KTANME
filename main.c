@@ -268,6 +268,36 @@ intro(const int *screen) {
   delay(animation_wait);
 }
 
+//win screen
+win_animation(const int *screen) {
+  int animation_wait = 3000000;
+  fill_screen(0x00);
+  delay(animation_wait*2);
+
+  set_background(screen, disarmedbomb1);
+  present_screen(screen);
+
+  delay(animation_wait);
+
+  set_background(screen, disarmedbomb2);
+  present_screen(screen);
+
+  delay(animation_wait);
+
+  set_background(screen, disarmedbomb3);
+  present_screen(screen);
+
+  delay(animation_wait);
+
+  set_background(screen, disarmedbomb4);
+  present_screen(screen);
+
+  delay(animation_wait*7);
+
+  fill_screen(0x00);
+  delay(animation_wait);
+}
+
 //check if cursor is hover over button
 uint8_t virtual_button(uint8_t cx, uint8_t cy, uint8_t btnX0, uint8_t btnY0, uint8_t btnX1, uint8_t btnY1) {
   if (cx >= btnX0 && cx <= btnX1 && cy >= btnY0 && cy <= btnY1) {
@@ -313,14 +343,17 @@ int main(void)
   uint8_t seed = 0;
   int screen[128];
   uint16_t input[8];
-  
-  //reset scores
-  //write_page(0x0000, empty);
 
   //cursor coordinates
   uint8_t cx = 32;
   uint8_t cy = 16;
 
+  //hold all buttons at startup to wipe high scores
+  get_input(input);
+  if (input[BUTTON1]&&input[BUTTON2]&&input[BUTTON3]&&input[BUTTON4]) {
+    //reset scores
+    write_page(0x0000, empty);
+  }
   intro(screen);
 
   //menu logic
@@ -458,6 +491,10 @@ int main(void)
 
       //win condition, solve all modules
       if (win) {
+        
+        //win sequence
+        win_animation(screen);
+
         game = 0;
         //win sequence
         //win screen, score, then input name
