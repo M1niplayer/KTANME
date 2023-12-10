@@ -193,6 +193,15 @@ explode(const int *screen) {
 
   clear_screen();
 
+  delay(animation_wait*2);
+
+  set_background(screen, you_died);
+  present_screen(screen);
+
+  delay(animation_wait*20);
+
+  clear_screen();
+
   delay(animation_wait);
 }
 
