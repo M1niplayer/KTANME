@@ -263,34 +263,50 @@ void uint8_to_binary(uint8_t number, uint8_t *binary) {
   }
 }
 
-uint8_t* stars_to_solved(const uint8_t *stars, uint8_t count) {
+uint8_t stars_to_solved(const uint8_t *stars) {
   uint8_t i = 0;
   uint8_t solved*;
   uint8_t leftCount = 0;
-  uint8_t rightCount = 0;
+  uint8_t rightCount = 0;;
   for (i = 0; i < 4; i++) {
     if (stars[i]) leftCount++;
   }
   for (i = 4; i < 8; i++) {
     if (stars[i]) rightCount++;
   }
+  uint8_t count = leftCount + rightCount;
   
   //logic
   if (stars[0]) solved[0] = 0;
-  else solved[3] = 0;
+  else {solved[0] = 1; solved[3] = 0;}
 
   if (count > 4){solved[2] = 0; solved[6] = 1;}
-  else if (count < 3){solved[5] = 1;}
+  else if (count < 3){solved[2] = 1;}
+  else {solved[2] = 0;}
 
-  if (stars[4] && (stars[5] || stars[6])) {solved[4] = 1; solved[5] = 0;}
-  else solved[7] = 0;
+  if (stars[4] && (stars[3] || stars[5])) {solved[4] = 1; solved[5] = 0;}
+  else if (stars[4]) solved[7] = 0;
+  else if (!stars[4]) solved[5] = 1;
 
-  if (rightCount > leftCount) {solved[1] = 1; solved[2] = 1;
-  else {solved[2] = 1; solved[7] = 1;}
+  if (!stars[5]) solved[6] = 0; 
+  else {
+    //cut all even wires
+    solved[1] = 0;
+    solved[3] = 0;
+    solved[5] = 0;
+    solved[7] = 0;
+  }
 
-  if (!stars[1]) solved[4] = 0;
-  else if (!stars[4]) solved[1] = 0;
+  if (rightCount > leftCount) {solved[1] = 1; solved[3] = 1;
+  else {solved[1] = 0; solved[3] = 0;}
+
+  if ((!stars[5]) || (!stars[7])) solved[7] = 0; 
+  else solved[4] = 1;
+  
+  if (!stars[1]) solved[4] = 0; solved[6] = 0;
+  else solved[4] = 1; solved[6] = 0;
   return solved;
+  }
 }
 
 int main(void)
