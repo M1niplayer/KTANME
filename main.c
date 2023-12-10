@@ -263,9 +263,18 @@ void uint8_to_binary(uint8_t number, uint8_t *binary) {
   }
 }
 
+uint8_t binary_to_uint8(uint8_t *binary) {
+  uint8_t i = 0;
+  uint8_t number = 0;
+  for (i = 0; i < 8; i++) {
+    number += binary[i] << i;
+  }
+  return number;
+}
+
 uint8_t stars_to_solved(const uint8_t *stars) {
   uint8_t i = 0;
-  uint8_t solved*;
+  uint8_t solved[8];
   uint8_t leftCount = 0;
   uint8_t rightCount = 0;;
   for (i = 0; i < 4; i++) {
@@ -297,16 +306,15 @@ uint8_t stars_to_solved(const uint8_t *stars) {
     solved[7] = 0;
   }
 
-  if (rightCount > leftCount) {solved[1] = 1; solved[3] = 1;
+  if (rightCount > leftCount) {solved[1] = 1; solved[3] = 1;}
   else {solved[1] = 0; solved[3] = 0;}
 
   if ((!stars[5]) || (!stars[7])) solved[7] = 0; 
   else solved[4] = 1;
   
-  if (!stars[1]) solved[4] = 0; solved[6] = 0;
+  if (!stars[1]) {solved[4] = 0; solved[6] = 0;}
   else solved[4] = 1; solved[6] = 0;
-  return solved;
-  }
+  return binary_to_uint8(solved);
 }
 
 int main(void)
@@ -321,7 +329,6 @@ int main(void)
   //cursor coordinates
   uint8_t cx = 32;
   uint8_t cy = 16;
-
 
   set_temp_config(0b00100000); //0.25c resolution
   set_temp_limits(-30, 60);
@@ -417,9 +424,8 @@ int main(void)
     for (i = 0; i < 8; i++) {
       if (stars[i]) starCount++;
     }
-    temperatureSolved = stars_to_solved(stars, starCount);
+    temperatureSolved = stars_to_solved(stars);
     uint8_to_binary(temperatureSolved, solvedWires);
-
 
     //solvedled logic
     uint8_t symbol1 = rand()%6; //6 different symbols
@@ -499,9 +505,6 @@ int main(void)
         if(tempHot){wire[wirePosition] = 1;} //solder
         else if(input[BUTTON3] == 1){wire[wirePosition] = 0;} //cut
       }
-
-    
-
 
       if () {
         //cut wire
