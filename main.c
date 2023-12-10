@@ -60,6 +60,7 @@ int setup(void){
   ODCG = 0x0;
   TRISFCLR = 0x70;
   TRISGCLR = 0x200;
+  //he
 
   /* Set up input pins */
   TRISDSET = (111 << 5);
