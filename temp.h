@@ -14,5 +14,6 @@ enum TEMP_ADDRESS {
 };
 
 int read_temp(void);
-void set_default_config(uint8_t config);
-void set_limits(int low, int high); //i
+void set_temp_config(uint8_t config);
+void set_temp_limits(int low, int high); //i
+uint8_t _read_temp_config();
