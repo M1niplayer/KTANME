@@ -36,7 +36,9 @@ void delay(int cyc)
 }
 
 int setup(void){
-/* Set up peripheral bus clock */
+  //SETUP CODE PROVIDED IN COURSE EXAMPLES, NOT BY US
+
+  /* Set up peripheral bus clock */
   OSCCON &= ~0x180000;
   OSCCON |= 0x080000;
 
@@ -70,6 +72,8 @@ int setup(void){
   /* Turn on SPI */
   SPI2CONSET = 0x8000;
 
+  //BACK TO OUR OWN CODE
+  
   /* Set up i2c */
 	I2C1CON = 0x0;
 	/* uh, actually I don't know if the baud rate generator has to be less than 
@@ -98,6 +102,7 @@ int setup(void){
   return 0;
 }
 
+//explosion animation
 explode(const int *screen) {
   int animation_wait = 1000000;
   clear_screen();
