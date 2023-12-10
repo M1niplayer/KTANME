@@ -487,8 +487,6 @@ int main(void)
     uint8_t PORTE8 = 0x0;
     uint8_t currentModule = LIGHTS_OUT;
     uint8_t game = 1;
-    
-    uint8_t game = 1;
 
     //wires logic lmao
     uint8_t wire[8] = {0, 0, 0, 0, 0, 0, 0, 0};
@@ -688,8 +686,6 @@ int main(void)
         else if(input[BUTTON3] == 1){wire[wirePosition] = 0;} //cut
       }
 
-      
-      
       //logic for lightsgame code
 
       //draw symbols
