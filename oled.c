@@ -33,7 +33,9 @@ uint8_t spi_send_recv(uint8_t data) {
 }
 
 void screen_init() {
-  //power on
+  //THIS CODE IS FROM THE COURSE EXAMPLES, NOT BY US
+  
+  //power on sequence
 	DISPLAY_COMMAND_DATA_PORT &= ~DISPLAY_COMMAND_DATA_MASK;
 	delay(10);
 	DISPLAY_VDD_PORT &= ~DISPLAY_VDD_MASK;
@@ -61,6 +63,8 @@ void screen_init() {
 	spi_send_recv(0x20);
 	
 	spi_send_recv(0xAF);
+
+  //BACK TO OUR OWN CODE AGAIN
 
   //Page addressing mode
   //command mode

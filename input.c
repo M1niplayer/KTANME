@@ -1,6 +1,8 @@
 #include <pic32mx.h>
 #include <stdint.h>
 
+#include "defs.h"
+
 int btnPressed()
 {
   if (PORTF & (1 << 1))
@@ -18,7 +20,7 @@ int btnPressed()
   return 0;
 }
 
-uint8_t move_repeat(uint8_t time) {
+uint8_t move_repeat(uint16_t time) {
   if (time == 0) return 0;
   if (time == 1) return 3;
   if ((time<=30) && (time>=15) && time%6==0) return 1;
@@ -28,46 +30,61 @@ uint8_t move_repeat(uint8_t time) {
   return 0;
 }
 
-void cursor_movement(uint8_t *cx, uint8_t *cy, const uint8_t *input){
+void cursor_movement(uint8_t *cx, uint8_t *cy, const uint16_t *input){
   //switch movement
-  *cx -= move_repeat(input[4]);
-  *cy -= move_repeat(input[5]);
-  *cy += move_repeat(input[6]);
-  *cx += move_repeat(input[7]);
+  *cx -= move_repeat(input[SWITCH4]);
+  *cy -= move_repeat(input[SWITCH3]);
+  *cy += move_repeat(input[SWITCH2]);
+  *cx += move_repeat(input[SWITCH1]);
+
+  if ((*cx > 127) && (*cx < 140)) *cx = 127;
+  if (*cx > 140) *cx = 0;
+  if ((*cy > 31) && (*cy < 120)) *cy = 31;
+  if (*cy > 119) *cy = 0;
 }
 
-void get_input(uint8_t *input) {
+void get_input(uint16_t *input) {
   //buttons
   if (PORTD & (1 << 7)) {
-    input[0] += 1;
-  } else input[0] = 0;
+    input[BUTTON4] += 1;
+  } else input[BUTTON4] = 0;
 
   if (PORTD & (1 << 6)){
-    input[1] += 1;
-  } else input[1] = 0;
+    input[BUTTON3] += 1;
+  } else input[BUTTON3] = 0;
 
   if (PORTD & (1 << 5)){
-    input[2] += 1;
-  } else input[2] = 0;
+    input[BUTTON2] += 1;
+  } else input[BUTTON2] = 0;
 
   if (PORTF & (1 << 1)){
-    input[3] += 1;
-  } else input[3] = 0;
+    input[BUTTON1] += 1;
+  } else input[BUTTON1] = 0;
 
   //switches
   if (PORTD & (1 << 11)) {
-    input[4] += 1;
-  } else input[4] = 0;
+    input[SWITCH4] += 1;
+  } else input[SWITCH4] = 0;
   
   if (PORTD & (1 << 10)) {
-    input[5] += 1;
-  } else input[5] = 0;
+    input[SWITCH3] += 1;
+  } else input[SWITCH3] = 0;
 
   if (PORTD & (1 << 9)) {
-    input[6] += 1;
-  } else input[6] = 0;
+    input[SWITCH2] += 1;
+  } else input[SWITCH2] = 0;
 
   if (PORTD & (1 << 8)) {
-    input[7] += 1;
-  } else input[7] = 0;
+    input[SWITCH1] += 1;
+  } else input[SWITCH1] = 0;
+
+  //pressing opposite directions result in no movement
+  if (input[SWITCH4] && input[SWITCH1]) {
+    input[SWITCH4] = 0;
+    input[SWITCH1] = 0;
+  }
+  if (input[SWITCH3] && input[SWITCH2]) {
+    input[SWITCH3] = 0;
+    input[SWITCH2] = 0;
+  }
 }
