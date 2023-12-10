@@ -661,8 +661,9 @@ int main(void)
         time -= 1;
         counter = 0;
       }
-      draw_sprite(cx, cy, cursor, screen);
 
+      set_background_pattern(screen, wire_easy);
+      
       //show temp routine
       temperature = read_temp();
       //since we don't change tempconfig, hardcode solution
@@ -674,125 +675,139 @@ int main(void)
       draw_digit(69, 3, temperature >> 1, screen);
       draw_digit(65, 3, (temperature >> 1)/10, screen);
       //bool hotBefore = false;
+      
+      uint8_t press = (input[BUTTON4]==1);
       //modify wires routine
+
       if (temperature > 28 ) { //&& !hotBefore
         tempHot = true;
         //hotBefore = true;
       }
 
-      if (tempHot || input[BUTTON3] == 1) {
-        //check if valid cursor position : return what position as uint8_t
-        if(tempHot){wire[wirePosition] = 1;} //solder
-        else if(input[BUTTON3] == 1){wire[wirePosition] = 0;} //cut
+      if ((tempHot || press) ==  1) {
+        int i = 0;
+        //check if valid position and return position if so
+        for (i = 0; i < 8; i++) {
+          if (virtual_button(cx, cy, 6 + i*13, 23, 12 + i*13, 27)){
+            wirePosition = i;
+            draw_digit(8 + i*13, 10, i+1, screen);
+            break;
+          }
+        
+         if(tempHot){wire[wirePosition] = 1;} //solder
+         else if(press){wire[wirePosition] = 0;} //cut
+        }
       }
 
       //logic for lightsgame code
 
       //draw symbols
-      switch(symbol1){
-      case 0:
-        draw_sprite(44, 5, square, screen);
-        break;
-      case 1:
-        draw_sprite(44, 5, grejs, screen);
-        break;
-      case 2:
-        draw_sprite(44, 5, stjarna, screen);
-        break;
-      case 3:
-        draw_sprite(44, 5, square2, screen);
-        break;
-      case 4:
-        draw_sprite(44, 5, grejs2, screen);
-        break;
-      case 5:
-        draw_sprite(44, 5, stjarna2, screen);
-        break;
-      }
-      switch(symbol2){
-      case 0:
-        draw_sprite(66, 5, square, screen);
-        break;
-      case 1:
-        draw_sprite(66, 5, grejs, screen);
-        break;
-      case 2:
-        draw_sprite(66, 5, stjarna, screen);
-        break;
-      case 3:
-        draw_sprite(66, 5, square2, screen);
-        break;
-      case 4:
-        draw_sprite(66, 5, grejs2, screen);
-        break;
-      case 5:
-        draw_sprite(66, 5, stjarna2, screen);
-        break;
-      }
-
-      //lightsgame code
-
-      uint8_t press = (input[BUTTON4]==1);
-
-      //left
-      if (virtual_button(cx, cy, 3, 7, 14, 17)) {
-        pointing = 1;
-        if (press) {
-          if (bitPointer<7) bitPointer++;
-          ledCounter = 45;
-        }
-      }
-
-      //right
-      if (virtual_button(cx, cy, 28, 7, 39, 17)) {
-        pointing = 1;
-        if (press) {
-          if (bitPointer>0) bitPointer--;
-          ledCounter = 45;
-        }
-      }
-
-      //done
-      if (virtual_button(cx, cy, 3, 20, 27, 28)) {
-        pointing = 1;
-        if (press) {
-          if (PORTE8 == solvedLed) {
-            //lights out solved
-          } else {
-            strikes++;
-            strike_flash(screen);
-          }
-        }
-      }
-
-      ledCounter++;
-      if (ledCounter > 59) ledCounter = 0;
-
-      //chosen led flashes
-      uint8_t flashingBit = 1 << bitPointer; 
-      if (ledCounter==50) PORTE = blink_led(PORTE8, flashingBit);
-      if (ledCounter == 0) PORTE = PORTE8;
+      //switch(symbol1){
+      //case 0:
+      //  draw_sprite(44, 5, square, screen);
+      //  break;
+      //case 1:
+      //  draw_sprite(44, 5, grejs, screen);
+      //  break;
+      //case 2:
+      //  draw_sprite(44, 5, stjarna, screen);
+      //  break;
+      //case 3:
+      //  draw_sprite(44, 5, square2, screen);
+      //  break;
+      //case 4:
+      //  draw_sprite(44, 5, grejs2, screen);
+      //  break;
+      //case 5:
+      //  draw_sprite(44, 5, stjarna2, screen);
+      //  break;
+      //}
+      //switch(symbol2){
+      //case 0:
+      //  draw_sprite(66, 5, square, screen);
+      //  break;
+      //case 1:
+      //  draw_sprite(66, 5, grejs, screen);
+      //  break;
+      //case 2:
+      //  draw_sprite(66, 5, stjarna, screen);
+      //  break;
+      //case 3:
+      //  draw_sprite(66, 5, square2, screen);
+      //  break;
+      //case 4:
+      //  draw_sprite(66, 5, grejs2, screen);
+      //  break;
+      //case 5:
+      //  draw_sprite(66, 5, stjarna2, screen);
+      //  break;
+      //}
+//
+      ////lightsgame code
+//
+      //uint8_t press = (input[BUTTON4]==1);
+//
+      ////left
+      //if (virtual_button(cx, cy, 3, 7, 14, 17)) {
+      //  pointing = 1;
+      //  if (press) {
+      //    if (bitPointer<7) bitPointer++;
+      //    ledCounter = 45;
+      //  }
+      //}
+//
+      ////right
+      //if (virtual_button(cx, cy, 28, 7, 39, 17)) {
+      //  pointing = 1;
+      //  if (press) {
+      //    if (bitPointer>0) bitPointer--;
+      //    ledCounter = 45;
+      //  }
+      //}
+//
+      ////done
+      //if (virtual_button(cx, cy, 3, 20, 27, 28)) {
+      //  pointing = 1;
+      //  if (press) {
+      //    if (PORTE8 == solvedLed) {
+      //      //lights out solved
+      //    } else {
+      //      strikes++;
+      //      strike_flash(screen);
+      //    }
+      //  }
+      //}
+//
+      //ledCounter++;
+      //if (ledCounter > 59) ledCounter = 0;
+//
+      ////chosen led flashes
+      //uint8_t flashingBit = 1 << bitPointer; 
+      //if (ledCounter==50) PORTE = blink_led(PORTE8, flashingBit);
+      //if (ledCounter == 0) PORTE = PORTE8;
+      //
+      ////selected bits logic
+      //selectedBits = 0xff & (7 << bitPointer - 1);
+      //if (bitPointer == 0){
+      //  selectedBits = 0x3;
+      //}
+      //
+      ////swap
+      //// e.g if selected bits is 00111000 then tempLed would be VV000VVVV
+      //// where V is the current value of lightled
+      //if (virtual_button(cx, cy, 17, 7, 25, 17)) {
+      //  pointing = 1;
+      //  if (press) {
+      //    PORTE8 = blink_led(PORTE8, selectedBits);
+      //    PORTE = PORTE8;
+      //    ledCounter = 0;
+      //  }
+      //}
+//
+      //if (pointing) draw_sprite(cx, cy, cursor_pointing, screen);
+      //else draw_sprite(cx, cy, cursor, screen);
       
-      //selected bits logic
-      selectedBits = 0xff & (7 << bitPointer - 1);
-      if (bitPointer == 0){
-        selectedBits = 0x3;
-      }
-      
-      //swap
-      // e.g if selected bits is 00111000 then tempLed would be VV000VVVV
-      // where V is the current value of lightled
-      if (virtual_button(cx, cy, 17, 7, 25, 17)) {
-        pointing = 1;
-        if (press) {
-          PORTE8 = blink_led(PORTE8, selectedBits);
-          PORTE = PORTE8;
-          ledCounter = 0;
-        }
-      }
-
-      if (pointing) draw_sprite(cx, cy, cursor_pointing, screen);
-      else draw_sprite(cx, cy, cursor, screen);
+      draw_sprite(cx, cy, cursor, screen);
       present_screen(screen);
     }
 
