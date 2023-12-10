@@ -234,31 +234,31 @@ uint8_t calulate_solution(uint8_t symbol1, uint8_t symbol2){
     }
 }
 
-void selectSymbol(int* symbolPic, uint8_t symbol){
-  switch(symbol){
-    case 0:
-      symbolPic = square;
-      break;
-    case 1:
-      symbolPic = grejs;
-      break;
-    case 2:
-      symbolPic = stjarna;
-      break;
-    case 3:
-      symbolPic = square2;
-      break;
-    case 4:
-      symbolPic = grejs2;
-      break;
-    case 5:
-      symbolPic = stjarna2;
-      break;
-    default:
-      symbolPic = square;
-      break;
-  }
-}
+// void selectSymbol(int* symbolPic, uint8_t symbol){
+//   switch(symbol){
+//     case 0:
+//       symbolPic = square;
+//       break;
+//     case 1:
+//       symbolPic = grejs;
+//       break;
+//     case 2:
+//       symbolPic = stjarna;
+//       break;
+//     case 3:
+//       symbolPic = square2;
+//       break;
+//     case 4:
+//       symbolPic = grejs2;
+//       break;
+//     case 5:
+//       symbolPic = stjarna2;
+//       break;
+//     default:
+//       symbolPic = square;
+//       break;
+//   }
+// }
 
 int main(void)
 {
@@ -420,7 +420,6 @@ int main(void)
 
     uint8_t tempLed = 0xff; //initial values
     uint8_t selectedTempLed = 0xff;
-    uint8_t solvedLed = 0b01001001;
     uint8_t lightsLed = PORTE; // sätt på alla ljus 1111 1111
     // skicka också ligihtsled till skärmen
 
