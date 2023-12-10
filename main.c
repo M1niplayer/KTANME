@@ -1,7 +1,6 @@
 #include <pic32mx.h>
 #include <stdint.h>
 #include <stdlib.h>
-
 #include "sprites.h"
 
 #include "i2c.h"
@@ -9,7 +8,7 @@
 #include "highscore.h"
 #include "oled.h"
 #include "temp.h"
-
+#include "defs.h"
 //möjligen kasta in i en const.h fil
 uint8_t lightsOutSymbols[3] = {28, 49, 60};
 
@@ -257,6 +256,42 @@ void selectSymbol(int* symbolPic, uint8_t symbol){
       break;
   }
 }
+void uint8_to_binary(uint8_t number, uint8_t *binary) {
+  uint8_t i = 0;
+  for (i = 0; i < 8; i++) {
+    binary[i] = (number >> i) & 1;
+  }
+}
+
+uint8_t* stars_to_solved(const uint8_t *stars, uint8_t count) {
+  uint8_t i = 0;
+  uint8_t solved*;
+  uint8_t leftCount = 0;
+  uint8_t rightCount = 0;
+  for (i = 0; i < 4; i++) {
+    if (stars[i]) leftCount++;
+  }
+  for (i = 4; i < 8; i++) {
+    if (stars[i]) rightCount++;
+  }
+  
+  //logic
+  if (stars[0]) solved[0] = 0;
+  else solved[3] = 0;
+
+  if (count > 4){solved[2] = 0; solved[6] = 1;}
+  else if (count < 3){solved[5] = 1;}
+
+  if (stars[4] && (stars[5] || stars[6])) {solved[4] = 1; solved[5] = 0;}
+  else solved[7] = 0;
+
+  if (rightCount > leftCount) {solved[1] = 1; solved[2] = 1;
+  else {solved[2] = 1; solved[7] = 1;}
+
+  if (!stars[1]) solved[4] = 0;
+  else if (!stars[4]) solved[1] = 0;
+  return solved;
+}
 
 int main(void)
 {
@@ -353,10 +388,23 @@ int main(void)
     
     uint8_t game = 1;
 
-    uint8_t wire[6] = {0, 0, 0, 0, 0, 0};
-    uint8_t solvedWires[6] = {1, 2, 0, 0, 1, 2};
+    //wires logic lmao
+    uint8_t wire[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+    uint8_t solvedWires[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+    uint8_t stars[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+    uint8_t temperatureSeed = rand()%255;
+    uint8_t starCount = 0;
     uint8_t wirePosition = 0;
-    
+    uint8_t temperatureSolved = 0;
+    uint8_t i = 0;
+    uint8_to_binary(temperatureSeed, stars);
+    for (i = 0; i < 8; i++) {
+      if (stars[i]) starCount++;
+    }
+    temperatureSolved = stars_to_solved(stars, starCount);
+    uint8_to_binary(temperatureSolved, solvedWires);
+
+
     //solvedled logic
     uint8_t symbol1 = rand()%6; //6 different symbols
     uint8_t symbol2 = rand()%6;
@@ -413,7 +461,7 @@ int main(void)
       }
       draw_sprite(cx, cy, cursor, screen);
 
-
+      //show temp routine
       temperature = read_temp();
       //since we don't change tempconfig, hardcode solution
       tempDecimals = (temperature & 0x3) * 25; 
@@ -423,22 +471,21 @@ int main(void)
       temperature = temperature >> 1;
       draw_digit(69, 3, temperature >> 1, screen);
       draw_digit(65, 3, (temperature >> 1)/10, screen);
-
-
-      
-
-      if (temperature > 28) {
+      //bool hotBefore = false;
+      //modify wires routine
+      if (temperature > 28 ) { //&& !hotBefore
         tempHot = true;
+        //hotBefore = true;
       }
 
-      if (tempHot || input[2] == 1) {
-        //check if valid position : return what position
-        //check if not existing 
+      if (tempHot || input[BUTTON3] == 1) {
+        //check if valid cursor position : return what position as uint8_t
         if(tempHot){wire[wirePosition] = 1;} //solder
-        else if(input[2] == 1){wire[wirePosition] = 2;} //cut
-        
-
+        else if(input[BUTTON3] == 1){wire[wirePosition] = 0;} //cut
       }
+
+    
+
 
       if () {
         //cut wire
