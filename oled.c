@@ -25,6 +25,7 @@ const uint8_t const font[130] = {0b00011100, 0b00001010, 0b00001001, 0b00001010,
 #define DISPLAY_RESET_PORT PORTG
 #define DISPLAY_RESET_MASK 0x200
 
+//oled screen communication
 uint8_t spi_send_recv(uint8_t data) {
 	while(!(SPI2STAT & 0x08));
 	SPI2BUF = data;
@@ -77,6 +78,7 @@ void screen_init() {
   DISPLAY_COMMAND_DATA_PORT |= DISPLAY_COMMAND_DATA_MASK;
 }
 
+//move screen pointer to specific place
 void set_pos(uint8_t column, uint8_t row) {
   //command mode
   DISPLAY_COMMAND_DATA_PORT &= ~DISPLAY_COMMAND_DATA_MASK;
@@ -108,6 +110,98 @@ void clear_screen() {
   fill_screen(0);
 }
 
+//draw 128x32 sprite to fill whole screen
+void set_background(int *screen, const int *background) {
+  uint8_t i;
+  for (i = 0; i<128; i++) {
+    screen[i] = background[i];
+  }
+}
+
+//fill screen with striped pattern
+void set_background_pattern(int pattern, int *screen) {
+  uint8_t i;
+  for (i = 0; i<128; i++) {
+    screen[i] = pattern;
+  }
+}
+
+//take the int array other functions operate on and push it to the real oled screen
+void present_screen(const int *screen) {
+  uint8_t row;
+  for (row = 0; row<4; row++) {
+    
+    set_pos(0, row);
+    
+    uint8_t column;
+    for (column = 0; column<128; column++) {
+      int c = screen[column];
+      int shift = (int)(row*8);
+      uint8_t data;
+      if (shift<0) data = (uint8_t)(c<<-shift);
+      else data = (uint8_t)(c>>shift);
+      
+      spi_send_recv(data);
+    }
+  }
+}
+
+//draw a sprite to screen, transparency support
+void draw_sprite(uint8_t x, uint8_t y, const int *sprite, int *screen) {
+  uint8_t width = (uint8_t)(sprite[METADATA]>>WIDTH);
+  uint8_t height = (uint8_t)(sprite[METADATA]>>HEIGHT);
+  uint8_t alpha = (uint8_t)(sprite[METADATA]>>ALPHA);
+
+  uint8_t max_column = width;
+  if (max_column + x > 128) max_column = 128-x;
+
+  if (alpha) {
+    uint8_t column;
+    for (column = 0; column<max_column; column++) {
+
+      int sprite_c = sprite[column+IMAGE];
+      int sprite_a = sprite[column+IMAGE+width];
+      
+      screen[x+column] = ((screen[x+column] & (~(sprite_a<<y))) | (sprite_c<<y)); //((sprite_c & sprite_a)<<y))
+    }
+  } else {
+    uint8_t column;
+    for (column = 0; column<max_column; column++) {
+
+      int sprite_c = sprite[column+IMAGE];
+
+      screen[x+column] = sprite_c<<y; //((sprite_c & sprite_a)<<y))
+    }
+  }
+}
+
+//draw a single digit to screen
+void draw_digit(uint8_t x, uint8_t y, uint8_t digit, int *screen) {
+  digit = digit%10;
+  uint8_t column;
+  for (column = 0; column<128-x; column++) {
+    if (column>2) break;
+    int digit_c = num[(digit*3)+column];
+    
+    screen[x+column] = ((screen[x+column] & (~(0x1f<<y))) | ((int)digit_c<<y));
+  }
+}
+
+//draw a single letter to screen
+void draw_letter(uint8_t x, uint8_t y, uint8_t letter, int *screen) {
+  letter = letter%26;
+  uint8_t column;
+  for (column = 0; column<128-x; column++) {
+    if (column>4) break;
+    int letter_c = font[(letter*5)+column];
+    
+    screen[x+column] = ((screen[x+column] & (~(0x1f<<y))) | ((int)letter_c<<y));
+  }
+}
+
+
+// old draw sprite that does not need int[128] of screen, no transparency support
+
 // print a sprite directly to anywhere on the oled screen, but overwrites the columns it overlaps
 // void draw_sprite(uint8_t x, uint8_t y, const int *sprite) {
 //   uint8_t width = (uint8_t)(sprite[METADATA]>>WIDTH);
@@ -137,86 +231,3 @@ void clear_screen() {
 //     }
 //   }
 // }
-
-void set_background(int *screen, const int *background) {
-  uint8_t i;
-  for (i = 0; i<128; i++) {
-    screen[i] = background[i];
-  }
-}
-
-void set_background_pattern(int pattern, int *screen) {
-  uint8_t i;
-  for (i = 0; i<128; i++) {
-    screen[i] = pattern;
-  }
-}
-
-void present_screen(const int *screen) {
-  uint8_t row;
-  for (row = 0; row<4; row++) {
-    
-    set_pos(0, row);
-    
-    uint8_t column;
-    for (column = 0; column<128; column++) {
-      int c = screen[column];
-      int shift = (int)(row*8);
-      uint8_t data;
-      if (shift<0) data = (uint8_t)(c<<-shift);
-      else data = (uint8_t)(c>>shift);
-      
-      spi_send_recv(data);
-    }
-  }
-}
-
-void draw_sprite(uint8_t x, uint8_t y, const int *sprite, int *screen) {
-  uint8_t width = (uint8_t)(sprite[METADATA]>>WIDTH);
-  uint8_t height = (uint8_t)(sprite[METADATA]>>HEIGHT);
-  uint8_t alpha = (uint8_t)(sprite[METADATA]>>ALPHA);
-
-  uint8_t max_column = width;
-  if (max_column + x > 128) max_column = 128-x;
-
-  if (alpha) {
-    uint8_t column;
-    for (column = 0; column<max_column; column++) {
-
-      int sprite_c = sprite[column+IMAGE];
-      int sprite_a = sprite[column+IMAGE+width];
-      
-      screen[x+column] = ((screen[x+column] & (~(sprite_a<<y))) | (sprite_c<<y)); //((sprite_c & sprite_a)<<y))
-    }
-  } else {
-    uint8_t column;
-    for (column = 0; column<max_column; column++) {
-
-      int sprite_c = sprite[column+IMAGE];
-
-      screen[x+column] = sprite_c<<y; //((sprite_c & sprite_a)<<y))
-    }
-  }
-}
-
-void draw_digit(uint8_t x, uint8_t y, uint8_t digit, int *screen) {
-  digit = digit%10;
-  uint8_t column;
-  for (column = 0; column<128-x; column++) {
-    if (column>2) break;
-    int digit_c = num[(digit*3)+column];
-    
-    screen[x+column] = ((screen[x+column] & (~(0x1f<<y))) | ((int)digit_c<<y));
-  }
-}
-
-void draw_letter(uint8_t x, uint8_t y, uint8_t letter, int *screen) {
-  letter = letter%26;
-  uint8_t column;
-  for (column = 0; column<128-x; column++) {
-    if (column>4) break;
-    int letter_c = font[(letter*5)+column];
-    
-    screen[x+column] = ((screen[x+column] & (~(0x1f<<y))) | ((int)letter_c<<y));
-  }
-}
