@@ -245,7 +245,7 @@ uint8_t calulate_solution(uint8_t symbol1, uint8_t symbol2){
       case 56:
         return 0b00001001;
       case 77:
-        return 0b01001000;
+        return 0b01000001;
       case 88:
         return 0b00011000;
       case 98:
@@ -583,7 +583,6 @@ int main(void)
       }
       
       //logic for lightsgame code
-
       //draw symbols
       switch(symbol1){
       case 0:
@@ -626,6 +625,9 @@ int main(void)
         break;
       }
 
+      draw_digit(106, 23, symbol1, screen);
+      draw_digit(111, 23, symbol2, screen);
+
       //lightsgame code
 
       uint8_t press = (input[BUTTON4]==1);
@@ -653,7 +655,7 @@ int main(void)
         pointing = 1;
         if (press) {
           if (PORTE8 == solvedLed) {
-            //lights out solved
+            win = 1;
           } else {
             strikes++;
             gain_strike(screen, strikes);
