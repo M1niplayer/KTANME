@@ -261,7 +261,6 @@ uint8_t calulate_solution(uint8_t symbol1, uint8_t symbol2){
 
 int main(void)
 {
-  
   // microcontroller setup for timers, interupts, i/o, i2c, spi, etc
   setup();
   //pseudorandomness
@@ -283,8 +282,6 @@ int main(void)
   //menu logic
   set_background_pattern(0, screen);
   present_screen(screen);
-
-  //write_page(0x0000, empty);
 
   while(1) {
     PORTE = 0;
@@ -346,7 +343,6 @@ int main(void)
       //show highscores
       uint8_t i;
       //first 
-
       for (i = 0; i<4; i++) {
         if (highscores[0] <i+1) break;
 
@@ -385,20 +381,10 @@ int main(void)
         draw_digit(73+46, 7+(i*6), seconds/10, screen);
         draw_digit(77+46, 7+(i*6), seconds%10, screen);
         
-
         draw_letter(43+46, 7+(i*6), highscores[((i+4)*5)+1], screen);
         draw_letter(49+46, 7+(i*6), highscores[((i+4)*5)+2], screen);
         draw_letter(55+46, 7+(i*6), highscores[((i+4)*5)+3], screen);
-      }
-
-      //draw_digit(29, 3, highscores[0], screen);
-      //draw_digit(26, 3, highscores[0]/10, screen);
-
-      //draw_digit(90, 3, read_single_byte(0x0001), screen);
-      //draw_digit(87, 3, read_single_byte(0x0001)/10, screen);
-      //draw_digit(84, 3, read_single_byte(0x0002), screen);
-      //draw_digit(81, 3, read_single_byte(0x0002)/10, screen);
-      
+      }      
       cursor_movement(&cx, &cy, input);
       if (pointing) draw_sprite(cx, cy, cursor_pointing, screen);
       else draw_sprite(cx, cy, cursor, screen);
@@ -409,26 +395,19 @@ int main(void)
 
     //gameSetup
     srand(seed);
-    
     uint16_t time = 900 - (difficulty*300);
-
     counter = 0;
+    uint8_t game = 1;
+    uint8_t strikes = 0;
+    //leds setup
     uint8_t selectedBits = 0xff;
     uint8_t bitPointer = 0;
-
     uint8_t PORTE8 = 0x0;
-
-    uint8_t currentModule = LIGHTS_OUT;
-
-    uint8_t game = 1;
     
     //solvedled logic
     uint8_t symbol1 = rand()%6; //6 different symbols
     uint8_t symbol2 = rand()%6;
-    
     uint8_t solvedLed = calulate_solution(symbol1, symbol2);
-
-    uint8_t strikes = 0;
 
     while (game) {
       //timer
@@ -437,9 +416,7 @@ int main(void)
 
       //win condition, solve all modules
       if (win) {
-
         game = 0;
-
         //win sequence
         //win screen, score, then input name
         uint8_t name[3];
@@ -549,13 +526,11 @@ int main(void)
       //lose condition
       if (time == 0 || strikes > 3) {
         explode(screen);
-        
         game = 0;
         continue;
       }
 
       get_input(input);
-      
       //cursor movement
       uint8_t pointing = 0;
       cursor_movement(&cx, &cy, input);
@@ -571,6 +546,7 @@ int main(void)
       draw_digit(116, 3, seconds/10, screen);
       draw_digit(120, 3, seconds%10, screen);
 
+      //draw strikes
       if (strikes>0) draw_sprite(102, 14, strike, screen);
       if (strikes>1) draw_sprite(110, 14, strike, screen);
       if (strikes>2) draw_sprite(118, 14, strike, screen);
@@ -581,7 +557,6 @@ int main(void)
         time -= 1;
         counter = 0;
       }
-      
       //logic for lightsgame code
       //draw symbols
       switch(symbol1){
@@ -604,6 +579,7 @@ int main(void)
         draw_sprite(44, 5, stjarna2, screen);
         break;
       }
+        draw_sprite(66, 5, grejs2, screen);
       switch(symbol2){
       case 0:
         draw_sprite(66, 5, square, screen);
@@ -625,11 +601,7 @@ int main(void)
         break;
       }
 
-      draw_digit(106, 23, symbol1, screen);
-      draw_digit(111, 23, symbol2, screen);
-
       //lightsgame code
-
       uint8_t press = (input[BUTTON4]==1);
 
       //left
@@ -688,14 +660,10 @@ int main(void)
           ledCounter = 0;
         }
       }
-
       if (pointing) draw_sprite(cx, cy, cursor_pointing, screen);
       else draw_sprite(cx, cy, cursor, screen);
       present_screen(screen);
     }
-
-    //when finished, do highscore input.
-    //to retry, press restart button
   }
   return 0;
 }
