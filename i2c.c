@@ -1,7 +1,6 @@
 /*
-* HI
-* most of this will be yoinked from the 
-* temp i2c example code at IS1200 example projects
+* copied over from IS1200 example project
+* some modifications made by Jimmy e.g. rename i2c_ack to i2c_set_ack
 *
 */
 
