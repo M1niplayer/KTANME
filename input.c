@@ -3,23 +3,6 @@
 
 #include "defs.h"
 
-int btnPressed()
-{
-  if (PORTF & (1 << 1))
-    return 1; // BTN1
-
-  if (PORTD & (1 << 5))
-    return 2; // BTN2
-
-  if (PORTD & (1 << 6))
-   return 3; // BTN3
-
-  if (PORTD & (1 << 7))
-    return 4; // BTN4
-
-  return 0;
-}
-
 uint8_t move_repeat(uint16_t time) {
   if (time == 0) return 0;
   if (time == 1) return 3;

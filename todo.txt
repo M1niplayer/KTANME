@@ -1,12 +1,8 @@
 ALLT
 
 
-lights:
-Det som ska lösa modulen är lamporna tända i hexkod
-
 ERIK:
 scroll screen left/right, up down? chunks? continious?
-present changes
 fancier clock? numbers scroll to next one? eh
 
 LIGHTSOUT BESKRIVNING
