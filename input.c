@@ -3,6 +3,7 @@
 
 #include "defs.h"
 
+//move faster the longer a direction is held
 uint8_t move_repeat(uint16_t time) {
   if (time == 0) return 0;
   if (time == 1) return 3;
@@ -12,6 +13,7 @@ uint8_t move_repeat(uint16_t time) {
   //if (time>60) return 1;
   return 0;
 }
+
 
 void cursor_movement(uint8_t *cx, uint8_t *cy, const uint16_t *input){
   //switch movement
@@ -26,6 +28,7 @@ void cursor_movement(uint8_t *cx, uint8_t *cy, const uint16_t *input){
   if (*cy > 119) *cy = 0;
 }
 
+//get which buttons and switches are held and how long they've been
 void get_input(uint16_t *input) {
   //buttons
   if (PORTD & (1 << 7)) {

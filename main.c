@@ -356,8 +356,7 @@ int main(void)
   }
   intro(screen);
 
-  //menu logic
-
+  //main loop, never exited
   while(1) {
     PORTE = 0;
     
@@ -368,6 +367,7 @@ int main(void)
     uint8_t ledCounter = 0;
     uint8_t difficulty = EASY;
 
+    //menu logic
     uint8_t inMenu = 1;
     while (inMenu) {
       //timer
@@ -376,17 +376,14 @@ int main(void)
       if ((IFS(0) & 0b100000000) == 0) {continue;}
       IFSCLR(0) = 0b100000000;
 
-      counter++;
-      if (counter > 59)
-      {
-        counter = 0;
-      }
-
       get_input(input);
 
+      //is cursor hovering over something clickable?
       uint8_t pointing = 0;
+
       uint8_t press = (input[BUTTON4]==1);
 
+      //difficulty mode buttons
       uint8_t buttonPress = virtual_button(cx, cy, 2, 7, 28, 13);
       if (buttonPress) {
         pointing = 1;
@@ -414,10 +411,12 @@ int main(void)
         }
       }
 
+      //draw menu background
       set_background(screen, menu);
+
       //show highscores
       uint8_t i;
-      //first 
+      //first 4
       for (i = 0; i<4; i++) {
         if (highscores[0] <i+1) break;
 
@@ -426,6 +425,7 @@ int main(void)
         uint8_t seconds = time%60;
         uint8_t minutes = time/60;
         
+        //draw place
         draw_digit(37, 7+(i*6), i+1, screen);
 
         //draw time
@@ -434,7 +434,7 @@ int main(void)
         draw_digit(73, 7+(i*6), seconds/10, screen);
         draw_digit(77, 7+(i*6), seconds%10, screen);
         
-
+        //draw name
         draw_letter(43, 7+(i*6), highscores[(i*5)+1], screen);
         draw_letter(49, 7+(i*6), highscores[(i*5)+2], screen);
         draw_letter(55, 7+(i*6), highscores[(i*5)+3], screen);
@@ -448,6 +448,7 @@ int main(void)
         uint8_t seconds = time%60;
         uint8_t minutes = time/60;
         
+        //draw place
         draw_digit(37+46, 7+(i*6), i+5, screen);
 
         //draw time
@@ -456,25 +457,35 @@ int main(void)
         draw_digit(73+46, 7+(i*6), seconds/10, screen);
         draw_digit(77+46, 7+(i*6), seconds%10, screen);
         
+        //draw name
         draw_letter(43+46, 7+(i*6), highscores[((i+4)*5)+1], screen);
         draw_letter(49+46, 7+(i*6), highscores[((i+4)*5)+2], screen);
         draw_letter(55+46, 7+(i*6), highscores[((i+4)*5)+3], screen);
-      }      
+      }
+
       cursor_movement(&cx, &cy, input);
+
+      //draw pointer or hand cursor depending on hover status
       if (pointing) draw_sprite(cx, cy, cursor_pointing, screen);
       else draw_sprite(cx, cy, cursor, screen);
+
+      //push virtual screen to OLED
       present_screen(screen);
     }
 
+    //gameSetup
     uint8_t win = 0;
 
-    //gameSetup
     srand(seed);
+
+    //higher difficulties mean less time
     uint16_t time = 900 - (difficulty*300);
+
     counter = 0;
     uint8_t game = 1;
     uint8_t strikes = 0;
-    //leds setup
+
+    //lightsout module setup
     uint8_t selectedBits = 0xff;
     uint8_t bitPointer = 0;
     uint8_t PORTE8 = 0x0;
@@ -516,6 +527,10 @@ int main(void)
           uint8_t selectedLetter = 255;
           uint8_t i;
 
+          //KEYBOARD
+
+          //is the cursor over one of the letter buttons?
+
           //first row of letters
           for (i = 0; i<13; i++) {
             uint8_t lx = 2 + (9*i);
@@ -538,6 +553,7 @@ int main(void)
             }
           }
 
+          //backspace button
           if (virtual_button(cx, cy, 119, 12, 124, 18)) {
             pointing = 1;
             if (press) {
@@ -545,6 +561,7 @@ int main(void)
             }
           }
 
+          //done button
           if (virtual_button(cx, cy, 96, 3, 120, 9)) {
             pointing = 1;
             if (press) {
@@ -553,6 +570,7 @@ int main(void)
           }
 
           if ((selectedLetter == 254) || backPress) {
+            //remove letter
             uint8_t c;
             for (c = 0; c<3; c++) {
               if (name[2-c] != 255) {
@@ -561,7 +579,9 @@ int main(void)
               }
             }
           } else if (selectedLetter == 253) {
+            //can only click done with 3 letters chosen
             if (name[2] != 255) {
+              //submit score to highscore, then back to menu
               nameInput = 0;
               
               uint16_t score = time;
@@ -573,6 +593,7 @@ int main(void)
               continue;
             }
           } else if (selectedLetter != 255) {
+            //input letter
             uint8_t c;
             for (c = 0; c<3; c++) {
               if (name[c] == 255) {
@@ -582,8 +603,10 @@ int main(void)
             }
           }
 
+          //draw keyboard
           set_background(screen, keyboard);
 
+          //draw name
           if (name[0] != 255) {
             draw_letter(60, 2, name[0], screen);
           }
@@ -610,12 +633,16 @@ int main(void)
       }
 
       get_input(input);
+
       //cursor movement
       uint8_t pointing = 0;
       cursor_movement(&cx, &cy, input);
+
+      //module background
       draw_sprite(0, 0, lightsoutmodule, screen);
       draw_sprite(95, 0, clockpart, screen);
 
+      //clock logic
       uint8_t seconds = time%60;
       uint8_t minutes = time/60;
       
@@ -630,12 +657,14 @@ int main(void)
       if (strikes>1) draw_sprite(110, 14, strike, screen);
       if (strikes>2) draw_sprite(118, 14, strike, screen);
 
+      //60fps
       counter++;
       if (counter > 59-(strikes*15))
       {
         time -= 1;
         counter = 0;
       }
+      
       //logic for lightsgame code
       //draw symbols
       switch(symbol1){
