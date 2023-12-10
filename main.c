@@ -222,6 +222,43 @@ gain_strike(const int *screen, uint8_t strikes) {
   }
 }
 
+//intro screen
+intro(const int *screen) {
+  int animation_wait = 500000;
+  fill_screen(0x11);
+  delay(animation_wait);
+
+  fill_screen(0x55);
+  delay(animation_wait);
+
+  fill_screen(0xff);
+
+  delay(animation_wait*3);
+
+  fill_screen(0xee);
+
+  delay(animation_wait);
+
+  fill_screen(0x55);
+
+  delay(animation_wait);
+
+  fill_screen(0x11);
+
+  delay(animation_wait);
+  set_background(screen, startup);
+  present_screen(screen);
+  delay(animation_wait*20);
+
+  fill_screen(0x55);
+
+  delay(animation_wait);
+
+  fill_screen(0x11);
+
+  delay(animation_wait);
+}
+
 //check if cursor is hover over button
 uint8_t virtual_button(uint8_t cx, uint8_t cy, uint8_t btnX0, uint8_t btnY0, uint8_t btnX1, uint8_t btnY1) {
   if (cx >= btnX0 && cx <= btnX1 && cy >= btnY0 && cy <= btnY1) {
@@ -275,13 +312,9 @@ int main(void)
   uint8_t cx = 32;
   uint8_t cy = 16;
 
-  //intro sequence / startup goes here
-  //A GAME BY Jimmy & Erik
-  //The manual is for the bomb defuser's eyes ONLY
+  intro(screen);
 
   //menu logic
-  set_background_pattern(0, screen);
-  present_screen(screen);
 
   while(1) {
     PORTE = 0;
