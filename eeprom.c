@@ -13,22 +13,17 @@
 #define EEPROM_CLIENT_ADDRESS 0x50 
 
 //void write(uint16_t address, uint8_t[64] data){
-//    //the same thing except 64 times
+//writes a single byte to an address in the eeprom
 //};
 void write_single_byte(uint16_t address, uint8_t data){
     //set up i2c bus with address
     _write_EEPROM_adr(address);
-    //could do something with interrputs
-    //I2CxMIF, master interupt
-    //probably have to handle bus collisions
-    //I2CxBIF
     i2c_send(data);
     i2c_recv_ack();
     i2c_stop();
 }
-//maybe one for currentread
 
-//this is random read, i.e you can access any legal memory loc you want
+/*this is random read, i.e you can access any legal memory loc you want*/
 uint8_t read_single_byte(uint16_t address){
     uint8_t temp;
     //set up i2c bus with address so that we can receive
@@ -53,7 +48,7 @@ void write_page(uint16_t address, uint8_t data[64]){
     }
     i2c_stop();
 }
-//must be 64 bit size array
+//must be 64 bit size array as argument
 void read_page(uint16_t address, uint8_t* temp){
     //set up i2c bus with address so that we can receive
     _recv_EEPROM_adr(address);
@@ -69,6 +64,7 @@ void read_page(uint16_t address, uint8_t* temp){
     i2c_stop();
 }
 
+/* helper function to setup eeprom with address*/
 void _write_EEPROM_adr(uint16_t address){
     do{
         i2c_start();
@@ -81,6 +77,8 @@ void _write_EEPROM_adr(uint16_t address){
     i2c_recv_ack();
 }
 
+/* helper function to setup eeprom with address, and then setup to start receiving 
+from address*/
 void _recv_EEPROM_adr(uint16_t address){
     _write_EEPROM_adr(address);
     //generate start and terminate write operation.
