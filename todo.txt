@@ -1,10 +1,35 @@
 ALLT
 
 
-lights:
-Det som ska lösa modulen är lamporna tända i hexkod
-
 ERIK:
 scroll screen left/right, up down? chunks? continious?
-present changes
 fancier clock? numbers scroll to next one? eh
+
+LIGHTSOUT BESKRIVNING
+Visa 2 symboler. Räkna antal 
+räkna antal hörn av figuren. ta det gånger 7. Om det är en stjärna, ta det * 6
+Kvadrat = 4*7, grejsemojs = 7*7, stjärna = 10*6
+
+personen ska sen säga hur många hörn det finns och sedan ska bombdefusern
+säga vilka bitar som ska sättas på. (1 indexerat)
+om talet är mindre än 80, sätt på bit 1
+om talet har en sjua i sig, sätt på bit 7
+om talet är delbart med 3, sätt på bit 3, 6
+om talet är mindre än hundra, kolla runt i chipkitet. Om det finns en label där det står QC.OK 1.7, sätt på bit 1
+om talet är mellan 100 och 110, sätt på bit 3
+om talet delat på två kan skrivas som en kvadrat av ett tal, ignorera alla andra instruktioner
+och sätt på bitarna 1, 4, 5, 8
+om inget annat, sätt på bitarna 4, 5
+
+kvadrat + kvadrat = 56       -> bit 1, 4
+kvadrat + grejsemojs = 77    -> bit 4, 7
+kvadrat + stjärna = 88       -> bit 4, 5
+grejsemojs + grejsemojs = 98 -> bit 1, 4, 5, 8
+grejsemojs + stjärna = 109   -> bit 3
+stjärna + stjärna = 120      -> bit 3, 6
+
+mer idéer -> någon lampa är "trasig", går aldrig att sättas på 
+          -> ha mer figurer som har samma antal hörn, och är svårigenkännbara
+
+
+ghost leg annan modul

@@ -8,7 +8,7 @@
 
 #define HIGHSCORE_SIZE 10
 
-void save_highscore(uint8_t char0, uint8_t char1, uint8_t char2, uint8_t score);
+void save_highscore(uint8_t char0, uint8_t char1, uint8_t char2, uint16_t score);
 void load_highscore(uint8_t *highscores);
 
 
