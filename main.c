@@ -1,12 +1,16 @@
 #include <pic32mx.h>
 #include <stdint.h>
-#include <string.h>
+#include <stdlib.h>
+
 #include "sprites.h"
 
 #include "i2c.h"
 #include "eeprom.h"
 #include "highscore.h"
-//#include "oled.h"
+#include "oled.h"
+
+//möjligen kasta in i en const.h fil
+uint8_t lightsOutSymbols[3] = {28, 49, 60};
 
 #include "defs.h"
 
@@ -23,6 +27,8 @@ enum difficulty{
   MEDIUM,
   HARD,
 };
+
+void *stdout = (void *) 0; //fixes stdout reference lmao
 
 void interrupt(void)
 {
@@ -93,7 +99,9 @@ int setup(void){
 
   TRISE = 0;
 
-  uint8_t recieveBuffer = I2C1RCV; //clear receive buffer
+  //clear
+  uint8_t recieveBuffer = I2C1RCV;
+  PORTE = 0;
 
   screen_init();
 
@@ -197,43 +205,102 @@ uint8_t virtual_button(uint8_t cx, uint8_t cy, uint8_t btnX0, uint8_t btnY0, uin
   return 0;
 }
 
+uint8_t blink_led(uint8_t current, uint8_t selected){
+  uint8_t tempLed;
+  uint8_t selectedTempLed;
+  tempLed = current & (0xff & ~selected); //set selected leds to 0
+  selectedTempLed = ~current & selected; //invert selected leds in separate variable
+  current = tempLed | selectedTempLed; //OR result together
+  return current;
+}
+
+uint8_t calulate_solution(uint8_t symbol1, uint8_t symbol2){
+  uint8_t solution = lightsOutSymbols[symbol1%3] + lightsOutSymbols[symbol2%3];
+    switch(solution){
+      case 56:
+        return 0b00001001;
+      case 77:
+        return 0b01001000;
+      case 88:
+        return 0b00011000;
+      case 98:
+        return 0b10011001;
+      case 109:
+        return 0b00000100;
+      case 120:
+        return 0b00100100;
+      default:
+        return 0b00011000; //case 88
+    }
+}
+
+void selectSymbol(int* symbolPic, uint8_t symbol){
+  switch(symbol){
+    case 0:
+      symbolPic = square;
+      break;
+    case 1:
+      symbolPic = grejs;
+      break;
+    case 2:
+      symbolPic = stjarna;
+      break;
+    case 3:
+      symbolPic = square2;
+      break;
+    case 4:
+      symbolPic = grejs2;
+      break;
+    case 5:
+      symbolPic = stjarna2;
+      break;
+    default:
+      symbolPic = square;
+      break;
+  }
+}
+
 int main(void)
 {
   
   // microcontroller setup for timers, interupts, i/o, i2c, spi, etc
   setup();
+  //pseudorandomness
+  uint8_t seed = 0;
   int screen[128];
-
   uint16_t input[8];
   
+  //reset scores
   //write_page(0x0000, empty);
-  
+
   //cursor coordinates
   uint8_t cx = 32;
   uint8_t cy = 16;
 
   //intro sequence / startup goes here
   //A GAME BY Jimmy & Erik
-  //Keep the manual close at hand
+  //The manual is for the bomb defuser's eyes ONLY
 
   //menu logic
   set_background_pattern(0, screen);
-
   present_screen(screen);
-
-  uint8_t highscores[41];
 
   //write_page(0x0000, empty);
 
   while(1) {
-    PORTE++;
+    PORTE = 0;
+    
+    uint8_t highscores[41];
     load_highscore(highscores);
+    
     uint8_t counter = 0;
     uint8_t difficulty = EASY;
 
     uint8_t inMenu = 1;
     while (inMenu) {
       //timer
+      
+      seed += 1;
       if ((IFS(0) & 0b100000000) == 0) {continue;}
       IFSCLR(0) = 0b100000000;
 
@@ -340,11 +407,15 @@ int main(void)
 
     uint8_t win = 0;
 
-    uint16_t time = 900 - (((uint16_t) difficulty)*300);
-    counter = 0;
+    //gameSetup
+    srand(seed);
+    
+    uint16_t time = 900 - (difficulty*300);
 
+    counter = 0;
     uint8_t selectedBits = 0xff;
     uint8_t bitPointer = 0;
+
     uint8_t PORTE8 = 0xff;
 
     uint8_t tempLed = 0xff; //initial values
@@ -356,7 +427,18 @@ int main(void)
     uint8_t currentModule = LIGHTS_OUT;
 
     uint8_t game = 1;
+    
+    //solvedled logic
+    uint8_t symbol1 = rand()%6; //6 different symbols
+    uint8_t symbol2 = rand()%6;
+    
+    uint8_t solvedLed = calulate_solution(symbol1, symbol2);  
+    //int symbolPic1 [33];
+    //int symbolPic2 [33];
+    //selectSymbol(symbolPic1, symbol1);
+    //selectSymbol(symbolPic2, symbol2);
 
+    PORTE = 0;
     while (game) {
       //timer
       if ((IFS(0) & 0b100000000) == 0) {continue;}
@@ -364,6 +446,7 @@ int main(void)
 
       //win condition, solve all modules
       if (win) {
+
         game = 0;
 
         //win sequence
@@ -497,11 +580,13 @@ int main(void)
 
       //show what the bitpointer is at
       //throw in a help function so that my eyes don't hurt
-      PORTE8 = PORTE & 0xff;
       //draw whatever. 
-      draw_digit(85, 3, bitPointer, screen);
-      draw_digit(82, 3, bitPointer /10, screen);
-      draw_digit(79, 3, bitPointer /100, screen);
+      draw_digit(85, 3, symbol1, screen);
+      draw_digit(82, 3, symbol1 /10, screen);
+      draw_digit(79, 3, symbol1 /100, screen);
+      draw_digit(76, 3, symbol1 /1000, screen);
+      draw_digit(73, 3, symbol1 /10000, screen);
+      draw_digit(70, 3, symbol1 /100000, screen);
       
       //draw_digit(76, 3, selectedBits, screen);
 
@@ -512,9 +597,17 @@ int main(void)
         counter = 0;
       }
       draw_sprite(cx, cy, cursor, screen);
-      present_screen(screen);
+      //logic for lightsgame code
+      uint8_t flashingBit = 1 << bitPointer; 
+      if (counter==50 || counter == 0) PORTE = blink_led(PORTE, flashingBit);
 
+      //draw symbols
+      //draw_sprite(83, 10, square, screen);
+      //draw_sprite(60, 10, symbolPic1, screen);
+      draw_digit(85, 10, symbol2, screen);
+      draw_digit(81, 10, symbol1, screen);
       //lightsgame code
+
       // if ((counter%30 == 0) && (btnPressed() != 0)) //add gamemode toggle
       // {
       //   //draw dummy leds
@@ -550,6 +643,32 @@ int main(void)
       //     PORTE = lightsLed;
       //   }
       // }
+
+      if (counter%30 == 0 && btnPressed() != 0) //add gamemode toggle
+      {
+
+        //pointer logic. 
+        if (btnPressed() == 4 && bitPointer >= 7) ; //skip, too far to the left
+        else if(btnPressed() == 1 && bitPointer == 0) ; //skip, too far to the right
+        else{
+          if (btnPressed() == 4) bitPointer += 1;
+          if (btnPressed() == 1) bitPointer -= 1;
+        }
+        
+        //selected bits logic
+        selectedBits = 0xff & (7 << bitPointer - 1);
+        if (bitPointer == 0){
+          selectedBits = 0x3;
+        }
+        
+        // e.g if selected bits is 00111000 then tempLed would be VV000VVVV
+        // where V is the current value of lightled
+        if (btnPressed() == 3) {
+          PORTE  = blink_led(PORTE8, selectedBits);
+          PORTE8 = blink_led(PORTE8, selectedBits);
+        }
+      }
+      present_screen(screen);
     }
 
     //when finished, do highscore input.
