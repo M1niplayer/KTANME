@@ -197,30 +197,32 @@ explode(const int *screen) {
 }
 
 //strike! animation
-strike_flash(const int *screen) {
-  int animation_wait = 500000;
+gain_strike(const int *screen, uint8_t strikes) {
+  if (strikes < 4) {
+    int animation_wait = 500000;
 
-  fill_screen(0x55);
-  delay(animation_wait);
+    fill_screen(0x55);
+    delay(animation_wait);
 
-  fill_screen(0xff);
+    fill_screen(0xff);
 
-  delay(animation_wait*5);
+    delay(animation_wait*5);
 
-  fill_screen(0xee);
+    fill_screen(0xee);
 
-  delay(animation_wait);
+    delay(animation_wait);
 
-  fill_screen(0x55);
+    fill_screen(0x55);
 
-  delay(animation_wait);
+    delay(animation_wait);
 
-  fill_screen(0x11);
+    fill_screen(0x11);
 
-  delay(animation_wait);
+    delay(animation_wait);
+  }
 }
 
-//check if cursor is pressing button, 2=press, 1=hover over, 0=not hovering at
+//check if cursor is hover over button
 uint8_t virtual_button(uint8_t cx, uint8_t cy, uint8_t btnX0, uint8_t btnY0, uint8_t btnX1, uint8_t btnY1) {
   if (cx >= btnX0 && cx <= btnX1 && cy >= btnY0 && cy <= btnY1) {
     return 1;
@@ -545,7 +547,7 @@ int main(void)
       }
 
       //lose condition
-      if (time == 0) {
+      if (time == 0 || strikes > 3) {
         explode(screen);
         
         game = 0;
@@ -654,7 +656,7 @@ int main(void)
             //lights out solved
           } else {
             strikes++;
-            strike_flash(screen);
+            gain_strike(screen, strikes);
           }
         }
       }
